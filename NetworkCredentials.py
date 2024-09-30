@@ -1,3 +1,3 @@
 class NetworkCredentials:
-    ssid = 'xxx'
-    password = 'xxx'
+    ssid = 'norcot'
+    password = 'nor265cot'

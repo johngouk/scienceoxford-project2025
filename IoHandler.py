@@ -1,40 +1,46 @@
 # class to handle the IO for the demo setup
-from machine import Pin, ADC
+import esp32
+from machine import Pin, Signal, ADC
 import neopixel
-import time
+import time, random, os
+from micropython import const
+
+ESP32S3 = const('Generic ESP32S3 module with ESP32S3')
 
 
 class IoHandler:
     # create array of neopixels
-    rgb_leds = neopixel.NeoPixel(Pin(15), 8)
+    #rgb_leds = neopixel.NeoPixel(Pin(15), 8)
     # create list of RGB tuples to control led states
-    rgb_led_colours = [(0, 0, 0)] * 8
+    #rgb_led_colours = [(0, 0, 0)] * 8
 
     # red led
-    led = Pin(28, Pin.OUT)
+    ledPin = Pin(2, Pin.OUT, value=1)
+    led = Signal(ledPin, invert=False)
+    #led = Pin(28, Pin.OUT)
     led_state = 0
 
     # potentiometer
-    pot = ADC(26)
-    pot_value = 0
+    #pot = ADC(26)
+    #pot_value = 0
 
     # temp sensor
-    temp = ADC(4)
-    temp_value = 0
+    #temp = ADC(4)
+    temp_value = 0.0
 
     # coloured leds
-    blue_led = Pin(16, Pin.OUT)
-    yellow_led = Pin(17, Pin.OUT)
-    green_led = Pin(18, Pin.OUT)
-    coloured_states = [0, 0, 0]
+    #blue_led = Pin(16, Pin.OUT)
+    #yellow_led = Pin(17, Pin.OUT)
+    #green_led = Pin(18, Pin.OUT)
+    #coloured_states = [0, 0, 0]
 
     def __init__(self):
         # get everything into a starting state
         self.__class__.show_red_led()
-        self.__class__.get_pot_reading()
-        self.__class__.show_coloured_leds()
-        self.__class__.clear_rgb_leds()
-
+        #self.__class__.get_pot_reading()
+        #self.__class__.show_coloured_leds()
+        #self.__class__.clear_rgb_leds()
+    '''
     # output, setters and getters for coloured leds
     @classmethod
     def show_coloured_leds(cls):
@@ -75,7 +81,7 @@ class IoHandler:
     @classmethod
     def get_green_led(cls):
         return 0 if cls.coloured_states[2] == 0 else 1
-
+    '''
     # red led handlers
     @classmethod
     def show_red_led(cls):
@@ -94,20 +100,23 @@ class IoHandler:
     def set_red_led(cls, state):
         cls.led_state = 0 if state == 0 else 1
         cls.show_red_led()
-
     # potentiometer handler
     @classmethod
     def get_pot_reading(cls):
-        cls.pot_value = cls.pot.read_u16()
+        # cls.pot_value = cls.pot.read_u16()
+        cls.pot_value = random.randint(0,100)
         return cls.pot_value
 
-    # temp handler
+    # temperature handler
+    # Use chip temperature for the moment
     @classmethod
     def get_temp_reading(cls):
-        temp_voltage = cls.temp.read_u16() * (3.3 / 65535)
-        cls.temp_value = 27 - (temp_voltage - 0.706) / 0.001721
+        if 'S3' in os.uname()[4]:
+            cls.temp_value = esp32.mcu_temperature()
+        else:
+            cls.temp_value = (esp32.raw_temperature() - 32) / 9 * 5
         return cls.temp_value
-
+    '''
     # rgb leds
     @classmethod
     def set_rgb_pixel(cls, pixel, colour):
@@ -133,3 +142,4 @@ class IoHandler:
         for n in range(8):
             cls.set_rgb_pixel(n, (0, 0, 0))
         cls.show_rgb_leds()
+    '''

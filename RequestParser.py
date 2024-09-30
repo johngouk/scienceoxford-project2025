@@ -276,3 +276,11 @@ class RequestParser:
                 return False
         else:
             return False
+        
+    # return the actual URL with no query values etc.
+    def get_url(self):
+        return self.url
+
+    # return the entire URL
+    def get_full_url(self):
+        return self.full_url
