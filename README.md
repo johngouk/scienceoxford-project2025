@@ -68,3 +68,6 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	 
 	 g.		Restarting the ESP will run the "main.py"; the logging settings can be adjusted in this file, by modifying line 21 `logging.basicConfig(level=logging.INFO...` to use whatever level you want - DEBUG is good of you want to see what's happening.
 	 
+##Web Server Interface##
+
+The WiFiConnection component will output the assigned IP address, and it will also appear on the top line of the dispay. The default hostname will be "mpy-esp32.local" for ESP32, and "???" for ESP8266, Direct your browser to this location (http://<IpAddress>) and you should see the home page. If your sensor(s) [is|are] connected then the temperatures should show on the bottom line, alternating with the gc.mem_free() output. 
