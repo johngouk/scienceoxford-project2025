@@ -24,7 +24,7 @@ The 5 month making experience allows for some cool and relatively complex things
 2.	Attach the ESP32/8266 to your computer with your choice of USB cable
 3.	Using something like Thonny or Mu
 
-	 a.		Connect to the attached ESP with your choice of USB cable **Caution! You may need additional USB drivers for some UARTs, especially the WCH family**
+	 a.		Connect to the attached ESP with your choice of USB cable  **Caution! You may need additional USB drivers for some UARTs, especially the WCH family**
   	 b.		Select the right mode (ESP32/ESP8266) in your editor
 
    	 c.		If necessary, use the tool to install micropython on the device 
