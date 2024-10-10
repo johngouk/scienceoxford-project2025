@@ -1,4 +1,11 @@
-import asyncio, time, gc, random
+import asyncio, time, random, logging
+from micropython import const
+
+logger = logging.getLogger(__name__)
+from ESP32LogRecord import ESP32LogRecord
+logger.record = ESP32LogRecord()
+
+
 from RequestParser import RequestParser
 from ResponseBuilder import ResponseBuilder
 
@@ -14,11 +21,10 @@ from ResponseBuilder import ResponseBuilder
 
 class WebServer:
     
-    def __init__(self, dataSources, print_progress=False):
-        self.print_progress = print_progress
+    def __init__(self, dataSources, docroot="/html"):
+        logger.info(const("initialising: Data Sources: %s"), dataSources)
         self.dataSources = dataSources
-        if print_progress:
-            print("DS:",dataSources)
+        self.docroot = docroot
 
     def run(self):
         server = asyncio.start_server(self.handle_request, "0.0.0.0", 80)        
@@ -35,10 +41,11 @@ class WebServer:
             
             request = RequestParser(raw_request)
             
-            if self.print_progress:
-                print(str(time.time()), peerInfo, request.method, request.get_action(), request.full_url) #, request.protocol, request.headers)
+            logger.debug(const("Request Info: t: %d client: %s method: %s action: %s URL: %s"),
+                         time.time(), peerInfo, request.method, request.get_action(),
+                         request.full_url)
             
-            response_builder = ResponseBuilder()
+            response_builder = ResponseBuilder(self.docroot)
 
             # filter out api request
             if request.url_match("/api"):
@@ -48,18 +55,11 @@ class WebServer:
                     response_obj = {
                         'status': 0
                         }
-                    if self.print_progress:
-                        print("RspObjInit:",response_obj)
                     for d in self.dataSources:
                         values = d()
-                        if self.print_progress:
-                            print("Vals:", values)
                         response_obj.update(values)
-                    if self.print_progress:
-                        print("RspObj:",response_obj)
                     response_builder.set_body_from_dict(response_obj)
-                    if self.print_progress:
-                        print("Rsp:",response_builder.body)
+                    logger.debug(const("Response Body: %s"), response_builder.body)
                     del response_obj
                 elif False:
                     pass
@@ -74,10 +74,8 @@ class WebServer:
                 response_builder.serve_static_file(request.url, "/api_index.html")
 
             """
-                Need to set up a try/except construct around the response build and send
-                back, because we get a MemoryError if there are too many clients
-                Maybe shoot request, response, write.drain and do gc.collect()?
-
+            try/except/finally to handle running out of Heap Memory error,
+            largely alleviated now by the loop with a fixed length buffer read
             """
             try:
                 del request
@@ -97,27 +95,33 @@ class WebServer:
                         fd.close()
                             
             except Exception as e:
-                print("Exception:", type(e), str(e), str(e.errno))
+                logger.error(const("Exception building/writing response: %s err: %s"), str(e), str(e.errno))
             finally:
                 await writer.drain()
                 del response_builder
                 await writer.wait_closed()
                 
         except Exception as e:
-            print('Exception:', type(e), str(e), str(e.errno), peerInfo)
+            logger.error(const("Exception processing request: Client: %s Ex: %s err: %s"), peerInfo, str(e), str(e.errno))
 
 def getValues():
-    return {"temp":45.3, "RH":65}
+    return {"temp0":random.uniform(40,65), "temp1":random.uniform(40,65)}
 
-# main coroutine to boot async tasks
+
+# Code to test as free-standing program
 async def main():
-    print("Running WebServer")
+    from flashLed import flashLed
+    from WiFiConnection import WiFiConnection
+    logger.debug(const('WiFiConnection starting...'))
+    if not WiFiConnection.start_station_mode(hostname = "john"):
+        raise RuntimeError('network connection failed')
+
+    logger.debug(const("Starting WebServer"))
+    ws = WebServer([getValues])
     # start web server task
     ws.run()
-    #server = asyncio.start_server(ws.handle_request, "0.0.0.0", 80)        
-    #asyncio.create_task(server)
     
-    print("Entering main loop")
+    logger.debug(const("Entering main loop"))
 
     # main task control loop pulses board led
     while True:
@@ -125,23 +129,12 @@ async def main():
         
         await asyncio.sleep(1)
 
-"""
-from flashLed import flashLed
-from WiFiConnection import WiFiConnection
-
-
-print('WebServer starting...')
-if not WiFiConnection.start_station_mode(hostname = "john", print_progress=True):
-    raise RuntimeError('network connection failed')
-
-print("Creating WebServer")
-ws = WebServer([getValues], print_progress=True)
-
-# start asyncio task and loop
-try:
-    # start the main async tasks
-    asyncio.run(main())
-finally:
-    # reset and start a new event loop for the task scheduler
-    asyncio.new_event_loop()
-"""
+if __name__== "__main__":
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+    # start asyncio task and loop
+    try:
+        # start the main async tasks
+        asyncio.run(main())
+    finally:
+        # reset and start a new event loop for the task scheduler
+        asyncio.new_event_loop()

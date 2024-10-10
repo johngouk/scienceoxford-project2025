@@ -2,6 +2,12 @@ from machine import Pin, Signal
 
 class flashLed:
     #import gc
+    # red led
+    # Defaults
+    ledPin = Pin(2, Pin.OUT, value=1)
+    led = Signal(ledPin, invert=False)
+    #led = Pin(28, Pin.OUT)
+    led_state = 0
 
 
     def __init__(self, pin = 2, invert = False):

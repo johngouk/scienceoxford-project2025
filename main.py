@@ -11,12 +11,17 @@
 
 """
 
-import time, random
+import time, random, logging
 from micropython import const
 import asyncio
 import random
 import os, gc
 from machine import Pin
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+from ESP32LogRecord import ESP32LogRecord
+logger = logging.getLogger(__name__)
+logger.record = ESP32LogRecord()
 
 from RequestParser import RequestParser
 from ResponseBuilder import ResponseBuilder
@@ -52,7 +57,7 @@ def line1():
     return part1
 
 def line0():
-    return WiFiConnection.ip
+    return WiFiConnection.st_ip
 
 
 """
@@ -68,7 +73,7 @@ def line0():
 async def main():
     # Start background tasks
     asyncio.create_task(lcd.updateLCD(2, line0,line1))
-    asyncio.create_task(ds.monitorTemp(10))
+    ds.run(10)
 
     # start web server task
     ws.run()
@@ -97,21 +102,26 @@ async def main():
 ************************************************
 """
 
-print('Program starting...')
-debugOut = False
+logger.info("Program starting")
+debugOut = True
 
 # 1
 lcd = LCD() # Use the defaults
 lcd.putstr("Starting...")
 
 # 2
-if not WiFiConnection.start_station_mode(hostname = "john", print_progress=debugOut):
+ok = WiFiConnection.start_station_mode()
+if ok:
+    # Set up as STA
+    pass
+else:
+    logger.warning("WiFi STA mode failed, cause %s : trying AP mode", WiFiConnection.statusText)
     raise RuntimeError('network connection failed')
 # 3
 ds = DS18B20()
 
 # 4
-ws = WebServer([ds.getValues], print_progress=debugOut)
+ws = WebServer([ds.getValues], "/webdocs")
 
 # 5
 try:

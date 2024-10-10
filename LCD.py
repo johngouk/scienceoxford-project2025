@@ -17,28 +17,39 @@
     def putstr(string)       Write the indicated string to the LCD at the current cursor position and advances the cursor position appropriately.
 
 """
-
+from micropython import const
 from machine import Pin
 from machine import I2C
 # LCD Libraries need to be copied to Flash
-from esp8266_i2c_lcd import I2cLcd
 import time, asyncio
+import logging
 
+logger = logging.getLogger(__name__)
+from ESP32LogRecord import ESP32LogRecord
+logger.record = ESP32LogRecord()
+
+from esp8266_i2c_lcd import I2cLcd
 
 
 class LCD(I2cLcd):
 
     DEFAULT_I2C_ADDR = 0x27
+    DEFAULT_I2C_FREQ = 100000
 
     def __init__(self, i2c=0, sclPin=18, sdaPin=19, columns=16, lines=2):
+        logger.info(const("initialising LCD: I2C: %d SCL: %d SDA: %d freq: %d col: %d lines: %d"),
+                    i2c, sclPin, sdaPin, LCD.DEFAULT_I2C_FREQ, columns, lines)
         self.sdaPin = sdaPin
         self.sclPin = sclPin
         self.i2cUnit = i2c
         self.scl = Pin(self.sclPin, Pin.PULL_UP)
         self.sda = Pin(self.sdaPin, Pin.PULL_UP)
-        #self.i2c = I2C(self.i2cUnit, scl=self.scl, sda=self.sda, freq=100000)
-        I2cLcd.__init__(self, I2C(self.i2cUnit, scl=self.scl, sda=self.sda, freq=100000), LCD.DEFAULT_I2C_ADDR, lines, columns)
+        self.l = lines
+        self.c = columns
+        super().__init__(I2C(self.i2cUnit, scl=self.scl, sda=self.sda, freq=LCD.DEFAULT_I2C_FREQ),
+                             LCD.DEFAULT_I2C_ADDR, lines, columns)
 
+    # Horrible function that does something until I find a better I2C LCD implementation...
     async def updateLCD(self, interval, line0, line1):
         blank = const('                ')
         while True:

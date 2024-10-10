@@ -1,6 +1,12 @@
 # Request object to handle http requests
 import re
 import json
+import logging
+
+logger = logging.getLogger(__name__)
+from ESP32LogRecord import ESP32LogRecord
+logger.record = ESP32LogRecord()
+
 
 class RequestParser:
 
@@ -253,6 +259,7 @@ class RequestParser:
         return url_string
 
     # return relevant data set depending on request method
+    # Can be set to "ERROR" by parse_first_line if it is != 3 parts
     def data(self):
         if self.method == 'POST':
             return self.post_data

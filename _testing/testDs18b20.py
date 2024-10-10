@@ -7,9 +7,9 @@ print("Starting...")
 # main coroutine to boot async tasks
 async def main():
 
-    ds = DS18B20()
+    ds = DS18B20(debugOn=True)
 
-    asyncio.create_task(ds.monitorTemp(30))
+    ds.run(3)
     
     # main task control loop pulses board led
     while True:

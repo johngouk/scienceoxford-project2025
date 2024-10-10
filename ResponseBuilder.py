@@ -3,6 +3,10 @@
     
     Class to build a HTTP response, based on the values provided.
     
+    __init__
+        Provide a doc root or default to "/html"; if it doesn't include a
+        "/" at the beginnign it gets added anyway!
+    
     serve_static_file
         Serves the specified static file, if url = "/" then either the specified
         default file, or if not specified, "index.html"
@@ -31,8 +35,13 @@ class ResponseBuilder:
     protocol = "HTTP/1.1"
     server = "ESP Micropython"
 
-    def __init__(self):
+    def __init__(self, root="/html"):
         # set default values
+        # Better check it... and fix because I can't be bothered to
+        # sort out everything after it's wrong
+        if root[0] != "/":
+            root = "/" + root
+        self.docroot = root
         self.status = 200
         self.content_type = "text/html"
         self.body = ""
@@ -69,7 +78,9 @@ class ResponseBuilder:
         # reinstate root path for listdir
         if len(path) == 0:
             path = "/"
-        # print(path, filename)
+        # Add docroot
+        path = path + self.docroot
+        #print(path, filename)
         # make sure working from root directory
         os.chdir("/")
         # get directory listing
@@ -130,7 +141,7 @@ class ResponseBuilder:
         #    self.response += self.body
         """
             Body now handled using self.fd, passed to something that has
-            the output stream handle as well
+            the output stream handler as well
         """
         if not self.isFile:
             self.response += self.body
