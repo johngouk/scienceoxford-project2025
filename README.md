@@ -17,21 +17,23 @@ The 5 month making experience allows for some cool and relatively complex things
 	* do something entertaining (NeoPixels, sound effects?)
 * all contained a box or something produced by 3D printing or laser cutting
 
-## Instructions ##
+## Hardware Instructions ##
+## Software Instructions ##
 
 1.	Clone the repository or download everything onto your computer
-2.	Attach the ESP32/8266 to your computer
+2.	Attach the ESP32/8266 to your computer with your choice of USB cable
 3.	Using something like Thonny or Mu
 
-	 a.		Connect to the attached ESP, and select the right mode (ESP32/ESP8266)
+	 a.		Connect to the attached ESP with your choice of USB cable **Caution! You may need additional USB drivers for some UARTs, especially the WCH family**
+  	 b.		Select the right mode (ESP32/ESP8266) in your editor
 
-	 b.		If necessary, use the tool to install micropython on the device 
+   	 c.		If necessary, use the tool to install micropython on the device 
 
-	 c. 	Direct the tool to the downloaded folder
+   	 d. 		Direct the tool to the downloaded folder
 	 
-	 d.		Edit the 'NetworkCredentials' file to contain your network SSID/password.
+	 e.		Edit the 'NetworkCredentials' file to contain your network SSID/password.
 
-	 e.		From download folder, upload the following files/directories to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/"
+	 f.		From download folder, upload the following files/directories to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/"
 	
 
 		sensors/
@@ -50,5 +52,5 @@ The 5 month making experience allows for some cool and relatively complex things
 		main.py
 		printMem.py
 	 
-	 f.		Restarting the ESP will run the "main.py"; the logging settings can be adjusted in this file, by modifying line 21 `logging.basicConfig(level=logging.INFO...` to use whatever level you want - DEBUG is good of you want to see what's happening.
+	 g.		Restarting the ESP will run the "main.py"; the logging settings can be adjusted in this file, by modifying line 21 `logging.basicConfig(level=logging.INFO...` to use whatever level you want - DEBUG is good of you want to see what's happening.
 	 
