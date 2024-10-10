@@ -70,4 +70,4 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	 
 ## Web Server Interface ##
 
-The WiFiConnection component will output the assigned IP address, and it will also appear on the top line of the display. The default hostname will be "mpy-esp32.local" for ESP32, and "???" for ESP8266, Direct your browser to this location (http://<IpAddress>) and you should see the home page. If your sensor(s) [is|are] connected then the temperatures should show on the bottom line, alternating with the gc.mem_free() output. 
+The WiFiConnection component will output the assigned IP address, and it will also appear on the top line of the display. The default hostname will be "mpy-esp32.local" for ESP32, and "???" for ESP8266. Direct your browser to this location (`http://<IpAddress>`) and you should see the home page. If your sensor(s) is/are connected then the temperatures should show on the bottom line, alternating with the gc.mem_free() output. 
