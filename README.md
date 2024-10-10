@@ -18,6 +18,16 @@ The 5 month making experience allows for some cool and relatively complex things
 * all contained a box or something produced by 3D printing or laser cutting
 
 ## Hardware Instructions ##
+
+The software is configured to use:
+
+*	A LCD1602 with a PCF8574 I2C backpack that reduces the required pin count, attached to GPIO18 (SCL) and GPIO19 (SDA), using I2C address 0x27
+
+  	The LCD1602 backlight requires a 5V power supply. I used the 5V pin on the ESP to power the LCD backpack, and fortunately the ESP was 5V-tolerant on its pins (Wemos-style D1 MINI Pro from AliExpress). **Be cautious about applying 5V from the backpack to any of your ESP's pins!**
+	
+*	One or more DS18B20s, attached using the non-parasitic power mode to GPIO26
+
+You'll have to consult your own ESP dev board instructions to work out which Dx pins are attached to which actual Espressif GPIOnn pins.
 ## Software Instructions ##
 
 1.	Clone the repository or download everything onto your computer
