@@ -11,3 +11,4 @@ ipaddr = w.ifconfig()[0]
 print('Connected! IP: ' + ipaddr)   # Need this to connect!!
 
 mip.install('logging')
+mip.install('time')
