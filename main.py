@@ -81,7 +81,7 @@ async def main():
     # main task control loop pulses board led
     while True:
         gc.collect()
-        printMem(debugOut, "L", "LedLoop")
+        printMem("L", "LedLoop")
         flashLed.toggle_red_led()
         await asyncio.sleep(1)
 
