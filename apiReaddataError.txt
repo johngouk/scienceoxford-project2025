@@ -1,0 +1,36 @@
+2024-10-12 14:44:38.583835 DEBUG - WebServer - Request:
+b'
+POST /api HTTP/1.1\r\n
+Host: 192.168.68.131\r\n
+Origin: http://192.168.68.131\r\n
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n
+Accept-Language: en-GB,en;q=0.9\r\n
+Accept-Encoding: gzip, deflate\r\n
+Connection: keep-alive\r\n
+Accept: */*\r\n
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15\r\n
+Referer: http://192.168.68.131/\r\n
+Content-Length: 15\r\n
+X-Requested-With: XMLHttpRequest\r\n\r\n
+action=readData'
+2024-10-12 14:44:38.698239 INFO - WebServer - Request Info: t: 782059478 client: ('192.168.68.120', 51617) method: POST action: readData URL: /api
+2024-10-12 14:44:38.778661 DEBUG - WebServer - Response Body: {"temp1": 27.12, "status": 0, "temp0": 26.07}
+2024-10-12 14:44:39.203220 DEBUG - printMem - 782059479 1 Heap info: Loc: L Action: LedLoop GC Free was: 8207888 now 8207808 diff -80)
+2024-10-12 14:44:39.423183 DEBUG - WebServer - Request:
+b'
+POST /api HTTP/1.1\r\n
+Host: 192.168.68.131\r\n
+Origin: http://192.168.68.131\r\n
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n
+Accept-Language: en-GB,en;q=0.9\r\n
+Accept-Encoding: gzip, deflate\r\n
+Connection: keep-alive\r\n
+Accept: */*\r\n
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15\r\n
+Referer: http://192.168.68.131/\r\n
+Content-Length: 15\r\n
+X-Requested-With: XMLHttpRequest\r\n\r\n'
+2024-10-12 14:44:39.538215 INFO - WebServer - Request Info: t: 782059479 client: ('192.168.68.120', 51618) method: POST action: False URL: /api
+2024-10-12 14:44:39.618963 WARNING - WebServer - Error 404 on URL b'POST /api HTTP/1.1\r\nHost: 192.168.68.131\r\nOrigin: http://192.168.68.131\r\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nAccept-Language: en-GB,en;q=0.9\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nAccept: */*\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15\r\nReferer: http://192.168.68.131/\r\nContent-Length: 15\r\nX-Requested-With: XMLHttpRequest\r\n\r\n'
+
+MISSING THE "action=readData" FIELD FOR THE POST DATA??

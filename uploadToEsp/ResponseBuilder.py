@@ -10,7 +10,6 @@
     serve_static_file
         Serves the specified static file, if url = "/" then either the specified
         default file, or if not specified, "index.html"
-        File is read into a variable, so don't go big!
         Sets content-type depending on the file suffix
         Sets HTTP response:
             200 - file exists
@@ -22,20 +21,39 @@
         
     build_response
         Creates response message using stored values etc.
-        Note that files are stored in memory, and attached.
+        Files are opened, the fd stored in the ResponseBuilder object, and the caller
+        then iterates reading/writing the file. Should really be passed the write stream
+        so this class can do the iteration!
 
 """
 
 
 import json
 import os
+import logging
 
+from micropython import const
+from ESPLogRecord import ESPLogRecord
+logger = logging.getLogger(__name__)
+
+# List of handled file types and returned content-type
+# Based on iana.org/assignments/media-types/media-types.xhtml
+fileToContentType = {
+    const("htm"):	const("text/html"),
+    const("html"):	const("text/html"),
+    const("css"):	const("text/css"),
+    const("csv"):	const("text/csv"),
+    const("md"):	const("text/markdown"),
+    const("rtf"):	const("text/richtext"),
+    const("xml"):	const("text/xml"),
+    const("unknown"):const("text/plain"),
+    }
 
 class ResponseBuilder:
     protocol = "HTTP/1.1"
     server = "ESP Micropython"
 
-    def __init__(self, root="/html"):
+    def __init__(self, root="/"):
         # set default values
         # Better check it... and fix because I can't be bothered to
         # sort out everything after it's wrong
@@ -80,25 +98,25 @@ class ResponseBuilder:
             path = "/"
         # Add docroot
         path = path + self.docroot
+        logger.debug("Path: %s Filename: %s", path, filename)
         #print(path, filename)
         # make sure working from root directory
         os.chdir("/")
         # get directory listing
-        dir_contents = os.listdir(path)
+        try:
+            dir_contents = os.listdir(path)
+        except Exception as e:
+            logger.warning("Exception: %s Path: %s Filename: %s", e, path, filename)
+            dir_contents = []
         # check if file exists
         if filename in dir_contents:
             # file found
             # get file type
             name, file_type = filename.rsplit(".", 1)
-            if file_type == "htm" or file_type == "html":
-                self.content_type = "text/html"
-            elif file_type == "js":
-                self.content_type = "text/javascript"
-            elif file_type == "css":
-                self.content_type = "text/css"
+            if file_type in fileToContentType:
+                self.content_type = fileToContentType[file_type]
             else:
-                # let browser work it out
-                self.content_type = "text/html"
+                self.content_type = fileToContentType['unknown']
             """
             # load content
             file = open(path + "/" + filename)
@@ -157,3 +175,31 @@ class ResponseBuilder:
             return status_messages[self.status]
         else:
             return "Invalid Status"
+
+
+if __name__ == "__main__":
+    """
+        Testing code: requires "index.html" in the current runtime directory
+        Prints out the non-method attributes of the created ResponseBuilder object instance
+    """
+    # Dummy class and bound method so we can check for and ignore the object bound methods
+    class dummyClass():
+        def dummyFunc():
+            pass
+    dummy = dummyClass()
+    logging.basicConfig(level=logging.DEBUG)
+    from RequestParser import RequestParser
+    request = const("GET /index.html?param1=1&param2=2 HTTP/1.1\r\nHost: localhost:80\r\nUser-Agent: SillyName\r\nAccept: text/html,*/*\r\n\r\n")
+    rp = RequestParser(request)
+    fullUrl = rp.full_url
+    url = rp.url
+    docroot = "/"
+    rb = ResponseBuilder(docroot)
+    logger.debug("Response Header: %s",rb.build_response())
+    rb.serve_static_file(url)
+    for attrName in dir(rb):
+        attr = getattr(rb, attrName)
+        if not isinstance(attr, type(dummy.dummyFunc)):
+            logger.debug("Attr: %s Value: %s", attrName, attr)
+     
+    

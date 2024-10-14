@@ -1,15 +1,16 @@
 """
 
-    SciOx Project for ESP32
+    SciOx Project for ESP
     Runs
     - a bunch of sensors, to be decided, but this one is using 2x DS18B20s on a single pin
     - an LCD, which shows
         - IP address
         - alternately GC mem_free, and sensor output
-    - a webserver, with all the html/js/css loaded on to the ESP32
+    - a webserver, with all the html/js/css loaded on to the ESP
     
 
 """
+version = 1.0
 
 import time, random, logging
 from micropython import const
@@ -18,10 +19,13 @@ import random
 import os, gc
 from machine import Pin
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
-from ESP32LogRecord import ESP32LogRecord
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
 logger = logging.getLogger(__name__)
-logger.record = ESP32LogRecord()
+try:
+    from ESPLogRecord import ESPLogRecord
+    logger.record = ESPLogRecord()
+except ImportError:
+    pass
 
 from RequestParser import RequestParser
 from ResponseBuilder import ResponseBuilder
@@ -59,6 +63,8 @@ def line1():
 def line0():
     return WiFiConnection.st_ip
 
+def getValues():
+    return {"temp0":random.randint(2500,3000)/100, "temp1":random.randint(2000,3500)/100}
 
 """
 ************************************************
@@ -102,12 +108,11 @@ async def main():
 ************************************************
 """
 
-logger.info("Program starting")
-debugOut = True
+logger.info("Program starting version %.2f", version)
 
 # 1
 lcd = LCD() # Use the defaults
-lcd.putstr("Starting...")
+lcd.putstr("Starting v%.2f ..." % version)
 
 # 2
 ok = WiFiConnection.start_station_mode()
@@ -116,12 +121,18 @@ if ok:
     pass
 else:
     logger.warning("WiFi STA mode failed, cause %s : trying AP mode", WiFiConnection.statusText)
-    raise RuntimeError('network connection failed')
+    password = 'password'
+    if WiFiConnection.start_ap_mode(ssid="", password=password):
+        logger.info("WiFi AP mode started as network SSID %s Pwd: %s Server IP: %s", WiFiConnection.ap_ssid, password, WiFiConnection.ap_ip)
+    else:
+        raise RuntimeError('Unable to connect to network or start AP mode')
+
 # 3
 ds = DS18B20()
 
 # 4
 ws = WebServer([ds.getValues], "/webdocs")
+#ws = WebServer([getValues], "/webdocs")
 
 # 5
 try:

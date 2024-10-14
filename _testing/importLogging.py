@@ -9,6 +9,7 @@ while not (w.isconnected()):
     pass
 ipaddr = w.ifconfig()[0]
 print('Connected! IP: ' + ipaddr)   # Need this to connect!!
+print('Hostname:', network.hostname())
 
 mip.install('logging')
 mip.install('time')

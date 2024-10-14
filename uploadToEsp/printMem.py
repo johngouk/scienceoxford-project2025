@@ -1,7 +1,7 @@
 import gc, time, logging
-from ESP32LogRecord import ESP32LogRecord
+from ESPLogRecord import ESPLogRecord
 logger = logging.getLogger(__name__)
-logger.record = ESP32LogRecord()
+logger.record = ESPLogRecord()
 
 mem = gc.mem_free()
 t = time.time()

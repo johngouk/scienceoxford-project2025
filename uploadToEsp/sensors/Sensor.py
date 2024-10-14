@@ -13,8 +13,8 @@ from micropython import const
 import logging
 
 logger = logging.getLogger(__name__)
-from ESP32LogRecord import ESP32LogRecord
-logger.record = ESP32LogRecord()
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
 
 class Sensor:
     """" Sensor: the base class for sensors
@@ -29,7 +29,7 @@ class Sensor:
     """
     
     def __init__(self, name="Sensor"):
-        logger.debug(const("__init__ executing"))
+        logger.debug(const("initialising"))
         self.name = name
         self.values = {}
 
@@ -125,7 +125,7 @@ class DisplayController(Sensor):
     def __init__(self, dataFunctions, name = "DataController"):
         super().__init__(name = name)
         self.dataFunctions = dataFunctions
-        logger.debug(const("__init__ executing"))
+        logger.debug(const("initialising"))
         
     def _collectData(self, state):
         values = {}

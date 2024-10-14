@@ -25,11 +25,13 @@ import time, asyncio
 import logging
 
 logger = logging.getLogger(__name__)
-from ESP32LogRecord import ESP32LogRecord
-logger.record = ESP32LogRecord()
+try:
+    from ESPLogRecord import ESPLogRecord
+    logger.record = ESPLogRecord()
+except ImportError:
+    pass
 
 from esp8266_i2c_lcd import I2cLcd
-
 
 class LCD(I2cLcd):
 
@@ -46,8 +48,13 @@ class LCD(I2cLcd):
         self.sda = Pin(self.sdaPin, Pin.PULL_UP)
         self.l = lines
         self.c = columns
-        super().__init__(I2C(self.i2cUnit, scl=self.scl, sda=self.sda, freq=LCD.DEFAULT_I2C_FREQ),
-                             LCD.DEFAULT_I2C_ADDR, lines, columns)
+        try:
+            super().__init__(I2C(self.i2cUnit, scl=self.scl, sda=self.sda, freq=LCD.DEFAULT_I2C_FREQ),
+                                 LCD.DEFAULT_I2C_ADDR, lines, columns)
+        except Exception as e:
+            logger.error("Exception %s initialising LCD; check pin numbers, connections: I2C Unit: %d Pins - SCL: %d SDA: %d",  
+                         e, self.i2cUnit, self.sclPin, self.sdaPin)
+            raise e
 
     # Horrible function that does something until I find a better I2C LCD implementation...
     async def updateLCD(self, interval, line0, line1):
@@ -63,4 +70,3 @@ class LCD(I2cLcd):
             self.move_to(0,1) # use second row
             self.putstr(line1())
             await asyncio.sleep(interval)
-        

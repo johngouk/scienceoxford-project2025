@@ -4,8 +4,8 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
-from ESP32LogRecord import ESP32LogRecord
-logger.record = ESP32LogRecord()
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
 
 
 class RequestParser:

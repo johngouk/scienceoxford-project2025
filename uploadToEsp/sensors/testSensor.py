@@ -12,19 +12,25 @@
 """
 import asyncio
 import random
-from sensors.Sensor import Sensor
-
 from micropython import const
+
+import logging
+
+logger = logging.getLogger(__name__)
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
+
+from sensors.Sensor import Sensor
 
 class TestSensor(Sensor):
     def __init__(self, name = "TestSensor", writeLog=True):
         super().__init__(name=name, writeLog=writeLog)
-        self.logMsg(const("{0} {1} __init__ executing sensor specific initialisation: "), self.name, type(self))
+        logger.debug(const("Executing sensor specific initialisation"))
         
     # SubClass data collection function implementation
     def _collectData(self):
         self.values = {"random":random.randint(1,10)}
-        self.logMsg(const("{0} {1} _collectData executing: values: {2}"), self.name, type(self), self.values)
+        logger.debug(const("_collectData executing: values: %s"), self.values)
        
 # main coroutine to boot async tasks
 async def main():
@@ -39,8 +45,9 @@ async def main():
         await asyncio.sleep(1)
 
 if __name__ == "__main__":
-    
-    # start asyncio task and loop
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+
+# start asyncio task and loop
     try:
         # start the main async tasks
         asyncio.run(main())

@@ -1,4 +1,7 @@
 # class to handle WiFi connection, and update the RTC!
+
+version = 1.0
+
 from micropython import const
 import time
 import network
@@ -11,8 +14,8 @@ else:
     ESP32 = False
 
 logger = logging.getLogger(__name__)
-from ESP32LogRecord import ESP32LogRecord
-logger.record = ESP32LogRecord()
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
 
 from NetworkCredentials import NetworkCredentials
 
@@ -54,12 +57,12 @@ class WiFiConnection:
         else:
             return None
     
-    def _startInterfaces(self, hostname=""):
+    def _startInterfaces(self, ap=True, st=True, hostname=""):
         self.setHostname(hostname)
         self.ap = network.WLAN(network.AP_IF)
-        self.ap.active(True)
+        self.ap.active(ap)
         self.st = network.WLAN(network.STA_IF)
-        self.st.active(True)
+        self.st.active(st)
         
     
     @classmethod
@@ -69,19 +72,29 @@ class WiFiConnection:
             network.hostname(self.hostname)
 
     @classmethod
-    def start_ap_mode(self, hostname=""):
-        self._startInterfaces(self, hostname)
+    def start_ap_mode(self, hostname="", ssid="", password=""):
+        self._startInterfaces(self, st=False, hostname=hostname)
+        self.ap.config(essid=ssid, authmode=network.AUTH_WPA_WPA2_PSK, password=password)
         self.ap_ip = self.ap.ifconfig()[0]
         self.ap_ssid = self.ap.config('ssid')
-        logger.info(const("WiFi AP: SSID: %s IP: %s"), self.ap_ssid, self.ap_ip)
+        logger.info(const("WiFi AP: SSID: %s Pwd: '%s' IP: %s"), self.ap_ssid, password, self.ap_ip)
         return True #, const("AP SSID:")+self.ap.config('ssid')+const( " IP:")+self.ap_ip
         
     @classmethod
     def start_station_mode(self, hostname=""):
-        self._startInterfaces(self, hostname)
+        # Sets self.st, so we're safe to use it later
+        self._startInterfaces(self, ap=False, hostname=hostname)
         # connect to wifi network
+        # If we're already connected but not to the right one, disconnect first
+        if self.st.isconnected():
+            currentSsid = self.st.config('ssid')
+            if currentSsid != NetworkCredentials.ssid:
+                self.st.disconnect()
+                while self.st.isconnected():
+                    time.sleep(0.1)
+        # Sart again...
         if not (self.st.isconnected()):
-            logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), NetworkCredentials.ssid, NetworkCredentials.password)
+            logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), NetworkCredentials.ssid, '********')
             self.st.connect(NetworkCredentials.ssid, NetworkCredentials.password)
             max_wait = 10
             # wait for connection - poll every 0.5 secs
@@ -99,7 +112,7 @@ class WiFiConnection:
             self.statusText = statusCodes[status]
         if not self.st.isconnected():                    
             logger.error(const("WiFi can't connect: Status %d: Reason: %s"), status, self.statusText)
-            return False,self.statusText
+            return False
         else:
             # connection successful
             config = self.st.ifconfig()
@@ -111,15 +124,18 @@ class WiFiConnection:
             self.st_ssid = self.st.config('ssid')
             logger.info(const("WiFi STA connected: SSID: %s Hostname: %s.local IP: %s"), self.st.config('ssid'), self.hostname, self.st_ip)
             logger.debug('Setting time...')
-            ntptime.settime()
-            t = time.localtime() # 8-tuple of date/time values
-            logger.info(const("Time set: {0:4d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}").format(t[0],t[1],t[2],t[3],t[4],t[5], t[6], t[7]))
+            try:
+                ntptime.settime()
+                t = time.localtime() # 8-tuple of date/time values
+                logger.info(const("Time set: {0:4d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}").format(t[0],t[1],t[2],t[3],t[4],t[5], t[6], t[7]))
+            except Exception as e:
+                logger.error("Unable to set NTP time: %s", e)
             return True #, {'msg':self.statusText,'ssid':self.st.config('ssid'),'IP':self.st_ip,'hostname':self.hostname,'status':self.st.status()}
             #const("{'STA':('ssid':'")+self.st.config('ssid')+const("','IP':'")+self.st_ip+const("','hostname':'")+self.hostname+const(".local')}") 
 
 if __name__ == "__main__":
-    from ESP32LogRecord import ESP32LogRecord
-    logger.record = ESP32LogRecord()
+    from ESPLogRecord import ESPLogRecord
+    logger.record = ESPLogRecord()
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
     print("****** Starting STA mode ******")
     #ok, info = WiFiConnection.start_station_mode() # Use default hostname

@@ -1,9 +1,11 @@
+version = 1.0
+
 import asyncio, time, random, logging
 from micropython import const
 
 logger = logging.getLogger(__name__)
-from ESP32LogRecord import ESP32LogRecord
-logger.record = ESP32LogRecord()
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
 
 
 from RequestParser import RequestParser
@@ -22,7 +24,7 @@ from ResponseBuilder import ResponseBuilder
 class WebServer:
     
     def __init__(self, dataSources, docroot="/html"):
-        logger.info(const("initialising: Data Sources: %s"), dataSources)
+        logger.info(const("initialising v%.2f: Data Sources: %s"), version, dataSources)
         self.dataSources = dataSources
         self.docroot = docroot
 
@@ -41,7 +43,9 @@ class WebServer:
             
             request = RequestParser(raw_request)
             
-            logger.debug(const("Request Info: t: %d client: %s method: %s action: %s URL: %s"),
+            logger.debug("Request:\n%s", raw_request)
+            
+            logger.info(const("Request Info: t: %d client: %s method: %s action: %s URL: %s"),
                          time.time(), peerInfo, request.method, request.get_action(),
                          request.full_url)
             
@@ -70,8 +74,11 @@ class WebServer:
                 # response_builder.serve_static_file(request.url, "/api_index.html")
             # try to serve static file
             else:
-                # ResponseBulider checks it all out...
+                # ResponseBuilder checks it all out...
                 response_builder.serve_static_file(request.url, "/api_index.html")
+            
+            if response_builder.status != 200:
+                logger.warning(const("Error %d on Request %s"), response_builder.status, raw_request)
 
             """
             try/except/finally to handle running out of Heap Memory error,

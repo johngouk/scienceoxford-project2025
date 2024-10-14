@@ -8,8 +8,8 @@ from micropython import const
 import logging
 
 logger = logging.getLogger(__name__)
-from ESP32LogRecord import ESP32LogRecord
-logger.record = ESP32LogRecord()
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
 
 from sensors.Sensor import Sensor
 
@@ -18,14 +18,21 @@ class DS18B20(Sensor):
     def __init__(self, name = "DS18B20", pin=26):
         super().__init__()
         logger.info(const("initialising sensor(s) on pin %d"), pin)
-        logger.debug(const("__init__ executing sensor specific initialisation: "))
-        logger.debug(const("__init__ initialising OneWire on Pin %d"), pin)
-        ow = onewire.OneWire(Pin(26)) # create a OneWire bus on GPIO12
-        logger.debug(const("__init__ initialising ds18x20 on Pin %d"), pin)
-        self.ds = ds18x20.DS18X20(ow)
-        logger.debug(const("__init__ scanning for ds18x20s..."))
-        self.roms = self.ds.scan()
-        logger.debug(const("__init__ found ds18x20s %s"), str(self.roms))
+        logger.debug(const("initialising OneWire on Pin %d"), pin)
+        try:
+            ow = onewire.OneWire(Pin(pin)) # create a OneWire bus on GPIO12
+        except Exception as e:
+            logger.error("Error %s initialising DS18B20 OneWire - check pins: %d", e, pin)
+            raise e
+        try:
+            logger.debug(const("initialising ds18x20 on Pin %d"), pin)
+            self.ds = ds18x20.DS18X20(ow)
+            logger.debug(const("scanning for ds18x20s..."))
+            self.roms = self.ds.scan()
+            logger.debug(const("found ds18x20s %s"), str(self.roms))
+        except Exception as e:
+            logger.error("Error %s initialising DS18B20 instance", e)
+            raise e
         self.values = {}
         self.sa = ""
 
@@ -74,7 +81,3 @@ if __name__ == "__main__":
     finally:
         # reset and start a new event loop for the task scheduler
         asyncio.new_event_loop()
-
-
-
-        
