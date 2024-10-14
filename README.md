@@ -32,15 +32,15 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 ## Software Instructions ##
 
 1.	Clone the repository or download everything onto your computer
-2.	Attach the ESP32/8266 to your computer with your choice of USB cable
+2.	Attach the ESP32/8266 to your computer with your choice of USB data cable
    	
    	**Caution! You may need additional USB drivers for some UARTs, especially the WCH family**
   	
 3.	Using something like Thonny or Mu
 
-	 a.		Connect to the attached ESP
+	 a.		Connect to the attached ESP using "Preferences|Interpreter"
 
-  	 b.		Select the right mode (ESP32/ESP8266) in your editor
+  	 b.		Select the right mode (ESP32/ESP8266) in your editor, and the right serial port
 
    	 c.		If necessary, use the tool to install micropython on the device 
 
@@ -49,9 +49,12 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	 e.		Edit the `uploadToEsp/NetworkCredentials.py` file to contain your network SSID/password.
 
 	 f.		Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/"
+	 
+	 g.		You now need to install the additional micropython-lib libs using `mip`. Switch focus back to the download root folder, and execute the `imstallLogging.py` script. 
+	 		This will install the `logging` and additional `time` modules on the ESP for use. You should see a `lib/` directory in the ESP root folder. 
 	
-4.	Go back up to the download folder, open the `main_n.m.py` file and adjust the logging settings by modifying the line `logging.basicConfig(level=logging.INFO...`, below the line `ADJUST LOG LEVEL HERE` to use whatever level you want - DEBUG is good if you want to see what's happening.
-5.	With the `main_n.m.py` file open, click on the green *Run* button on the toolbar; the main.py should be uploaded and run. 
+4.	From the download root folder, open the `main_n.m.py` file and adjust the logging settings by modifying the line `logging.basicConfig(level=logging.INFO...`, below the line `ADJUST LOG LEVEL HERE` to use whatever level you want - DEBUG is good if you want to see what's happening.
+5.	With the `main_n.m.py` file open and in focus in the IDE, click on the green *Run* button on the toolbar; the main.py should be uploaded and run. 
 
 	Depending on your dev board, 
 	*	The on-board LED should flash on and off at approximately 1Hz.
