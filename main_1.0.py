@@ -19,6 +19,7 @@ import random
 import os, gc
 from machine import Pin
 
+#           ADJUST LOG LEVEL HERE->vvvvvv, values are DEBUG, INFO, WARNING, ERROR, FATAL
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
 logger = logging.getLogger(__name__)
 try:
