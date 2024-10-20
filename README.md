@@ -59,7 +59,11 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	Depending on your dev board, 
 	*	The on-board LED should flash on and off at approximately 1Hz.
 
-	*	The LCD should show "Starting vn.m...", and then switch to showing the device's IP address on row0, and the temperature sensor(s) value(s) on row1, alternating with a display of the current heap space.
+	*	The LCD should show "Starting vn.m..."
+	
+	*	switch to showing the device's IP address on row0, and on row1 the mode ("S" or "A") with the SSID and then Hostname for 5 seconds each
+	
+	*	switch to the sensor(s) value(s) on row1, with each sensor name/value being shown for 1 second on rotation
 	
 	**The board will not respond to commands etc. until you hit the red "Stop" button, at which point Thonny will perform a soft reset and you will regain control.**
 6.	If you want to start the code running on board power-up, upload the `main_n.m.py` file onto the ESP, and rename it to `main.py`. It will then be executed on startup. If you want access to the board to modify its contents, use the red "Stop" button, and you should get command-line REPL access again.

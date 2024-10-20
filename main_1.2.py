@@ -79,6 +79,7 @@ async def main():
     #     the current values of lcd[0] and lcd[1]
     lcd = LCD() # Use the defaults
     lcd[0] = ("Starting v%.1f..." % version)
+    await asyncio.sleep(1)
 
     # 2
     ok = WiFiConnection.start_station_mode()
