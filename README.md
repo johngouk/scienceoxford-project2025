@@ -67,3 +67,20 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 ## Web Server Interface ##
 
 The WiFiConnection component will output the assigned IP address, and it will also appear on the top line of the display. The default hostname will be "mpy-esp32.local" for ESP32, and "???" for ESP8266. Direct your browser to this location (`http://<IpAddress>`) and you should see the home page, which currently displays two gauges, one for each temperature sensor detected on the OneWire bus.
+	
+## To Do##
+1.	Implement a central display controller that gets data/values from things and sends them to the LCD, with a rotating set of line subjects, maybe every second?
+
+2.	A button (or two!) that change the LCD displayed values, either for a short period or toggles around the options; maybe an Easter Egg for the student to programme??! Short, long and double presses also
+
+3.	A web page to configure the SSID/Password that is accessible from the AP mode
+
+4.	Decide on what we want to show on the LCD!
+
+5.	Test the CO2 sensor(s)
+
+6.	NeoPixels??
+
+7.	Implement a separate object to flash the on-board LED so that it doesn't clutter the main() and the timing isn't naff 
+
+8.	Weather forecast from accuweather? Another topic to rotate on the display! Only if STA mode on local network
