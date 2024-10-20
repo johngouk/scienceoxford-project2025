@@ -15,8 +15,8 @@ from sensors.Sensor import Sensor
 
 class DS18B20(Sensor):
 
-    def __init__(self, name = "DS18B20", pin=26):
-        super().__init__()
+    def __init__(self, interval = 5, name = "DS18B20", pin=26):
+        super().__init__(interval=interval, name=name)
         logger.info(const("initialising sensor(s) on pin %d"), pin)
         logger.debug(const("initialising OneWire on Pin %d"), pin)
         try:
@@ -35,6 +35,8 @@ class DS18B20(Sensor):
             raise e
         self.values = {}
         self.sa = ""
+        # Need to do this after all init completed!
+        self.run()
 
     # SubClass data collection function implementation
     def _collectData(self, state):

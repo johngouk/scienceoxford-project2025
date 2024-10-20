@@ -51,6 +51,15 @@ class WiFiConnection:
     def __init__(self):
         pass
     
+    @classmethod
+    def getIp(self):
+        if self.st != None and self.st.active():
+            return self.st_ip
+        elif self.ap != None and self.ap.active():        
+            return self.ap_ip
+        else:
+            return ""
+    
     def status():
         if self.st != None:
             return self.st.status()
@@ -92,7 +101,7 @@ class WiFiConnection:
                 self.st.disconnect()
                 while self.st.isconnected():
                     time.sleep(0.1)
-        # Sart again...
+        # Start again...
         if not (self.st.isconnected()):
             logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), NetworkCredentials.ssid, '********')
             self.st.connect(NetworkCredentials.ssid, NetworkCredentials.password)
@@ -121,7 +130,7 @@ class WiFiConnection:
             self.gateway = config[2]
             self.dns_server = config[3]
             self.hostname = network.hostname() # May as well use the actual value!
-            self.st_ssid = self.st.config('ssid')
+            self.ssid = self.st.config('ssid')
             logger.info(const("WiFi STA connected: SSID: %s Hostname: %s.local IP: %s"), self.st.config('ssid'), self.hostname, self.st_ip)
             logger.debug('Setting time...')
             try:
@@ -142,8 +151,9 @@ if __name__ == "__main__":
     ok = WiFiConnection.start_station_mode() # Use default hostname
     w = WiFiConnection()
     print("Result:", ok, "Info:", w.st_ssid, w.st_ip, w.hostname)
-    print("****** Starting STA mode ******")
+    print("****** Starting AP mode ******")
     #ok, errorMsg = WiFiConnection.start_ap_mode()
-    ok = WiFiConnection.start_ap_mode()
+    ok = WiFiConnection.start_ap_mode(password="nor265cot")
     w = WiFiConnection()
     print("Result:", ok, "Info:", w.ap_ssid, w.ap_ip, w.hostname)
+    print("Test getIp: %s" % WiFiConnection.getIp())

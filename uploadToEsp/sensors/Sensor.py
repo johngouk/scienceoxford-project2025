@@ -28,18 +28,20 @@ class Sensor:
                 returns a tuple of current values e.g. ("temp":25.6, "RH":55, "CO2":440)
     """
     
-    def __init__(self, name="Sensor"):
+    def __init__(self, interval = 5, name="Sensor"):
         logger.debug(const("initialising"))
         self.name = name
         self.values = {}
+        self.interval = interval
+        # Need to call run() after all init completed!
 
-    def run(self, interval=5):
+    def run(self):
         """
         run: A function that just returns having started the object's asyncio task
         
         """
         logger.debug(const("run executing"))
-        asyncio.create_task(self.taskToRun(interval))
+        asyncio.create_task(self.taskToRun(self.interval))
         
     async def taskToRun(self, interval):
         """

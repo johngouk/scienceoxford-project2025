@@ -74,6 +74,14 @@ class LcdApi:
         self.cursor_x = 0
         self.cursor_y = 0
 
+    def shr(self):
+        """Shift the display right"""
+        self.hal_write_command(self.LCD_MOVE | self.LCD_MOVE_DISP |
+                               self.LCD_MOVE_RIGHT)
+    def shl(self):
+        """Shift the display left"""
+        self.hal_write_command(self.LCD_MOVE | self.LCD_MOVE_DISP)
+
     def show_cursor(self):
         """Causes the cursor to be made visible."""
         self.hal_write_command(self.LCD_ON_CTRL | self.LCD_ON_DISPLAY |
