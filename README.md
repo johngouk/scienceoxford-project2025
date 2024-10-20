@@ -26,7 +26,7 @@ The software is configured to use:
 
   	The LCD1602 backlight requires a 5V power supply. I used the 5V pin on the ESP to power the LCD backpack, and fortunately the ESP was 5V-tolerant on its pins (Wemos-style D1 MINI Pro from AliExpress). **Be cautious about applying 5V from the backpack to any of your ESP's pins!**
 	
-*	One or more DS18B20s, attached using the non-parasitic power mode to GPIO26
+*	One or more DS18B20s, attached using the non-parasitic power mode to GPIO26, and a 4R7 resistor between VCC and the data pin, although it seems to swork without it (!)
 
 You'll have to consult your own ESP dev board instructions to work out which Dx pins are attached to which actual Espressif GPIOnn pins.
 ## Software Instructions ##
