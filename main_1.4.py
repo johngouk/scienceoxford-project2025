@@ -17,7 +17,7 @@
     
 
 """
-version = 1.3
+version = 1.4
 
 import time, random, logging
 from micropython import const
