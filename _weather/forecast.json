@@ -1,0 +1,48 @@
+{
+  "Headline": {
+    "EffectiveDate": "2024-10-20T20:00:00+01:00",
+    "EffectiveEpochDate": 1729450800,
+    "Severity": 7,
+    "Text": "Breezy Sunday evening",
+    "Category": "wind",
+    "EndDate": "2024-10-21T02:00:00+01:00",
+    "EndEpochDate": 1729472400,
+    "MobileLink": "http://www.accuweather.com/en/gb/reading/rg1-2/daily-weather-forecast/330396?unit=c&lang=en-us",
+    "Link": "http://www.accuweather.com/en/gb/reading/rg1-2/daily-weather-forecast/330396?unit=c&lang=en-us"
+  },
+  "DailyForecasts": [
+    {
+      "Date": "2024-10-20T07:00:00+01:00",
+      "EpochDate": 1729404000,
+      "Temperature": {
+        "Minimum": {
+          "Value": 10.4,
+          "Unit": "C",
+          "UnitType": 17
+        },
+        "Maximum": {
+          "Value": 17.2,
+          "Unit": "C",
+          "UnitType": 17
+        }
+      },
+      "Day": {
+        "Icon": 18,
+        "IconPhrase": "Rain",
+        "HasPrecipitation": true,
+        "PrecipitationType": "Rain",
+        "PrecipitationIntensity": "Light"
+      },
+      "Night": {
+        "Icon": 38,
+        "IconPhrase": "Mostly cloudy",
+        "HasPrecipitation": false
+      },
+      "Sources": [
+        "AccuWeather"
+      ],
+      "MobileLink": "http://www.accuweather.com/en/gb/reading/rg1-2/daily-weather-forecast/330396?day=1&unit=c&lang=en-us",
+      "Link": "http://www.accuweather.com/en/gb/reading/rg1-2/daily-weather-forecast/330396?day=1&unit=c&lang=en-us"
+    }
+  ]
+}

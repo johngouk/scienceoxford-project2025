@@ -15,3 +15,5 @@ print('Installing logging')
 mip.install('logging')
 print('Installing time add-ins')
 mip.install('time')
+# Only required for Weather RSS feed
+mip.install('xmltok')

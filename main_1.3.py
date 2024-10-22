@@ -9,13 +9,15 @@
     - a webserver, with all the html/js/css loaded on to the ESP
     
     Version
-    1.0		Clean version for SciOxPyConf
-    1.1		Moved everything into main
-    1.2		Using modified sensor & LCD versions
+    1.0 Clean version for SciOxPyConf
+    1.1 Moved everything into main
+    1.2 Using modified sensor & LCD versions
+    1.3 Moved flashLed code to separate coro in flashLed class - NEEDS FIXING
+    1.4 Added a Button on Pin, only announces presses for now; 
     
 
 """
-version = 1.2
+version = 1.3
 
 import time, random, logging
 from micropython import const
@@ -41,6 +43,26 @@ from flashLed import flashLed
 from WebServer import WebServer
 from ds18b20 import DS18B20
 from printMem import printMem
+from button.pushbutton import Pushbutton
+
+
+async def wait_press(e, lcd):
+    while True:
+        await e.wait()
+        e.clear()
+        print("Press Event!")
+
+async def wait_long(e, lcd):
+    while True:
+        await e.wait()
+        e.clear()
+        print("Long Event!")
+
+async def wait_double(e, lcd):
+    while True:
+        await e.wait()
+        e.clear()
+        print("Double Event!")
 
 """
 ************************************************
@@ -75,11 +97,25 @@ async def main():
 
     logger.info("Program starting version %.2f", version)
 
+    # 0 - flash the LED every second
+    # FIX THIS!
+    #led = flashLed() # which is the default :-)
+
     # 1 - Initialise and start the LCD; it will continuously update to show
     #     the current values of lcd[0] and lcd[1]
     lcd = LCD() # Use the defaults
     lcd[0] = ("Starting v%.1f..." % version)
     await asyncio.sleep(1)
+
+    pb = Pushbutton(Pin(17, Pin.IN, Pin.PULL_DOWN))
+    pb.press_func(None) # Event tracking
+    pb.double_func(None)
+    pb.long_func(None)
+
+    asyncio.create_task(wait_press(pb.press, lcd))
+    asyncio.create_task(wait_double(pb.double, lcd))
+    asyncio.create_task(wait_long(pb.long, lcd))
+
 
     # 2
     ok = WiFiConnection.start_station_mode()
@@ -98,9 +134,9 @@ async def main():
             raise RuntimeError('Unable to connect to network or start AP mode')
     lcd[0] = WiFiConnection.getIp()
     lcd[1] = "%s S:%s"%(mode, WiFiConnection.ssid)
-    await asyncio.sleep(5) # Let people read the IP/SSID/Hostname
+    await asyncio.sleep(5) # Let people read the IP/SSID
     lcd[1] = "%s H:%s"%(mode, WiFiConnection.hostname)
-    await asyncio.sleep(5) # Let people read the IP/SSID/Hostname
+    await asyncio.sleep(5) # Let people read the IP/Hostname
 
     # 3
     ds = DS18B20(interval=10) # Update sensor values every 10 seconds
@@ -116,7 +152,6 @@ async def main():
     while True:
         gc.collect()
         printMem("L", "LedLoop")
-        flashLed.toggle_red_led()
         values = ds.getValues()
         for k in values.keys():
             lcd[1] = "%s:%.1f"%(str(k), values[k])
