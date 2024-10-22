@@ -41,17 +41,11 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 3.	Using something like Thonny or Mu
 
 	 a.		Connect to the attached ESP using "Preferences|Interpreter"
-
-  	 b.		Select the right mode (ESP32/ESP8266) in your editor, and the right serial port
-
-   	 c.		If necessary, use the tool to install micropython on the device 
-
-   	 d. 	Direct the tool to the downloaded folder
-	 
+	 b.		Select the right mode (ESP32/ESP8266) in your editor, and the right serial port
+	 c.		If necessary, use the tool to install micropython on the device 
+	 d. 	Direct the tool to the downloaded folder
 	 e.		Edit the `uploadToEsp/NetworkCredentials.py` file to contain your network SSID/password.
-
 	 f.		Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/"
-	 
 	 g.		You now need to install the additional micropython-lib libs using `mip`. Switch focus back to the download root folder, and execute the `imstallLogging.py` script. 
 	 		This will install the `logging` and additional `time` modules on the ESP for use. You should see a `lib/` directory in the ESP root folder. 
 	
@@ -60,11 +54,8 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 
 	Depending on your dev board, 
 	*	The on-board LED should flash on and off at approximately 1Hz. **Currently broken!**
-
 	*	The LCD should show "Starting vn.m..."
-	
 	*	switch to showing the device's IP address on row0, and on row1 the mode ("S" or "A") with the SSID and then Hostname for 5 seconds each
-	
 	*	switch to the sensor(s) value(s) on row1, with each sensor name/value being shown for 1 second on rotation
 	
 	**The board will not respond to commands etc. until you hit the red "Stop" button, at which point Thonny will perform a soft reset and you will regain control.**
