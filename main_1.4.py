@@ -27,7 +27,7 @@ import os, gc
 from machine import Pin
 
 #           ADJUST LOG LEVEL HERE->vvvvvv, values are DEBUG, INFO, WARNING, ERROR, FATAL
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
 logger = logging.getLogger(__name__)
 try:
     from ESPLogRecord import ESPLogRecord
@@ -51,6 +51,7 @@ async def wait_press(e, lcd):
         await e.wait()
         e.clear()
         print("Press Event!")
+        lcd[0] = "Pressed"
 
 async def wait_long(e, lcd):
     while True:
@@ -82,11 +83,13 @@ async def main():
         Order of commands is important, because you can't call an object
         that hasn't been initialised
         So:
+        0 - Flash the LED
         1 - LCD to allow it to display something
-        2 - WiFi otherwise nothing happens
-        3 - Temperature sensors, which are need to provide data for the...
-        4 - Web server, which calls the other objects for data
-        5 - The main loop
+        2 - Pushbutton enable
+        3 - WiFi otherwise nothing happens
+        4 - Temperature sensors, which are need to provide data for the...
+        5 - Web server, which calls the other objects for data
+        6 - The main loop
 
     ************************************************
     """
@@ -99,7 +102,7 @@ async def main():
 
     # 0 - flash the LED every second
     # FIX THIS!
-    #led = flashLed() # which is the default :-)
+    led = flashLed() # which is the default :-)
 
     # 1 - Initialise and start the LCD; it will continuously update to show
     #     the current values of lcd[0] and lcd[1]
@@ -107,6 +110,7 @@ async def main():
     lcd[0] = ("Starting v%.1f..." % version)
     await asyncio.sleep(1)
 
+    # 2
     pb = Pushbutton(Pin(17, Pin.IN, Pin.PULL_DOWN))
     pb.press_func(None) # Event tracking
     pb.double_func(None)
@@ -116,8 +120,7 @@ async def main():
     asyncio.create_task(wait_double(pb.double, lcd))
     asyncio.create_task(wait_long(pb.long, lcd))
 
-
-    # 2
+    # 3
     ok = WiFiConnection.start_station_mode()
     mode = "?"
     if ok:
@@ -138,17 +141,20 @@ async def main():
     lcd[1] = "%s H:%s"%(mode, WiFiConnection.hostname)
     await asyncio.sleep(5) # Let people read the IP/Hostname
 
-    # 3
+    # 4
     ds = DS18B20(interval=10) # Update sensor values every 10 seconds
 
-    # 4
+    # 5
     ws = WebServer([ds.getValues], "/webdocs")
     #ws = WebServer([getValues], "/webdocs")
     
     # start web server task
     ws.run()
     
-    # main task control loop pulses board led
+    # 6
+    # main task control loop
+    # Display memory if in debug
+    # Show some values on the LCD for now
     while True:
         gc.collect()
         printMem("L", "LedLoop")
@@ -157,9 +163,6 @@ async def main():
             lcd[1] = "%s:%.1f"%(str(k), values[k])
             await asyncio.sleep(1)
         await asyncio.sleep(1)
-
-
-
 
 try:
     # start the main async tasks

@@ -15,16 +15,15 @@ class flashLed:
         # get everything into a starting state
         # red led
         ledPin = Pin(pin, Pin.OUT, value=1)
-        led = Signal(ledPin, invert)
+        led = Signal(ledPin, invert=invert)
         led_state = 0
-        self.__class__.show_red_led()
-        
+        self.show_red_led()
         asyncio.create_task(self.run(interval))
 
-    async def run(interval):
-        self.toggle_red_led()
-        await asyncio.sleep(interval)
-        
+    async def run(self, interval):
+        while True:
+            self.toggle_red_led()
+            await asyncio.sleep(interval)
 
     # red led handlers
     def show_red_led(cls):
@@ -40,3 +39,17 @@ class flashLed:
     def set_red_led(cls, state):
         cls.led_state = 0 if state == 0 else 1
         cls.show_red_led()
+
+async def main():
+        f = flashLed()
+        while True:
+            await asyncio.sleep(10)
+
+if __name__ == "__main__":
+    try:
+        # start the main async tasks
+        asyncio.run(main())
+    finally:
+        # reset and start a new event loop for the task scheduler
+        asyncio.new_event_loop()
+    

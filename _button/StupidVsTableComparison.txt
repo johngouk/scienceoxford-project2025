@@ -1,0 +1,42 @@
+FSM pushbutton
+
+micropython const imported
+starting button test...
+Pin: making pin
+Pin.value: False
+start: 8314352
+import used: 8704
+before pin: 9360
+after pin: 9504
+init pb used: 11136
+event pb used: 11376
+loop used: 11616
+Press Event!
+Double Event!
+Long Event!
+loop used: 12352
+
+
+Stupid code button
+
+starting button test...
+Pin: making pin
+Pin.value: False
+start: 8314032
+import used: 7616
+before pin: 7712
+after pin: 7856
+init pb used: 8096
+event pb used: 9792
+loop used: 10032
+Press Event!
+Press Event!
+Press Event!
+Long Event!
+loop used: 10720
+Press Event!
+Press Event!
+Press Event!
+Long Event!
+loop used: 10720
+Press Event!

@@ -12,7 +12,9 @@ class RequestParser:
 
     def __init__(self, raw_request):
         # make sure raw_request is a str
-        if isinstance(raw_request, bytes):
+        # Stream object returns bytes; memoryview is bytearray, but that doesn't work!
+        if isinstance(raw_request, bytes) or isinstance(raw_request, bytearray):
+            logger.debug("raw_request decode reqd: %s", type(raw_request))
             raw_request = raw_request.decode("utf-8")
         self.method = ""
         self.full_url = ""

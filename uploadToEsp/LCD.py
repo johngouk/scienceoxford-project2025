@@ -21,6 +21,7 @@
     def putstr(string)       Write the indicated string to the LCD at the current cursor position and advances the cursor position appropriately.
     def shr()             Shift (entire) display right
     def shl()             Shift (entire) display left
+    def scroll(line, msg, rate, times) Scroll the message on the line, at rate msecs/char, for times, -1 forever
 
 """
 from micropython import const
@@ -58,6 +59,9 @@ class LCD(I2cLcd):
         # Set up the local internal display buffer (not the LCD RAM buffer!)
         self.lines = [""] * self.rows
         self.dirty = [False] * self.rows
+        self._scrolling = [False] * self.rows
+        self._scrollTask = [None] * self.rows
+        #print("init: _scrollTask: %s _scrolling: %s " % (self._scrollTask, self._scrolling))
 
         try:
             super().__init__(I2C(self.i2cUnit, scl=self.scl, sda=self.sda, freq=LCD.DEFAULT_I2C_FREQ),
@@ -81,13 +85,61 @@ class LCD(I2cLcd):
                         await asyncio.sleep_ms(0)  # Reshedule ASAP
                     self.dirty[row] = False
             await asyncio.sleep_ms(20)  # Give other coros a look-in
+            
+    def _checkKillScroll(self, line):
+        #print("cKS: line: %d" % line)
+        if self._scrolling[line] and self._scrollTask[line] != None:
+            # Kill the existing task
+            self._scrollTask[line].cancel() # This might be a coro, and require await
+            self._scrollTask[line] = None
+            self._scrolling[line] = False
+                   
+    async def run_scroll(self, line, message, speed, times):
+        # Speed - delay in msec; times - number of scroll repeats, -1 forever
+        while times != 0:
+            if not self._scrolling[line]: # Someone jumped in with a direct write to the line
+                break
+            #print("wrap scroll cnt: ", times)
+            if times > 0:
+                times = times-1
+            mlen = len(message)
+            if times <= 0:
+                mlen = mlen - self.cols
+            for i in range(mlen):
+                if not self._scrolling[line]: # Someone jumped in with a direct write to the line
+                    break
+                #print("ws msg:",message)
+                self._setline(line, message[0:self.cols])
+                message = message[1:]+ message[0]
+                await asyncio.sleep_ms(speed)
+            
+    def scroll(self, line, message, speed=500, times=-1):
+        """Scrolls a message on the specified line"""
+        #print("wrap scroll: line: %d msg: %s" % (line, message))
+        self._checkKillScroll(line)
+        if message[len(message)-1] != " ": # Increase legibility
+            message = message + " "
+        if len(message) <= self.cols:
+            #print("Str <= %d: print" % maxLen)
+            self.__setitem__(line, message) # No need to scroll!
+            self._scrolling[line] = False
+            self._scrollTask[line] = None
+        else:
+            self._scrolling[line] = True
+            self._scrollTask[line] = asyncio.create_task(self.run_scroll(line, message, speed, times))
 
+    def _setline(self, line, message): # message <=16 chars
+        """Actually sets the line of the display"""
+        self.lines[line] = message  # Update stored line
+        self.dirty[line] = True  # Flag its non-correspondence with the LCD device
+        
     def __setitem__(self, line, message):  # Send string to display line 0 or 1
         """Set the indicated line buffer to 'message'"""
+        #print("_setitem: line: %d msg: %s" % (line, message))
         message = "{0:{1}.{1}}".format(message, self.cols)
         if message != self.lines[line]:  # Only update LCD if data has changed
-            self.lines[line] = message  # Update stored line
-            self.dirty[line] = True  # Flag its non-correspondence with the LCD device
+            self._checkKillScroll(line) # Get rid of the scroll() if doing one
+            self._setline(line, message)
 
     def __getitem__(self, line):
         """Get the indicated line buffer contents"""
@@ -103,12 +155,22 @@ if __name__ == "__main__":
     async def main():
         lcd[0] = "Starting..."
         await asyncio.sleep(2)
+        #         123456789ABCDEF0<---HERE
         lcd[1] = "This string should be cut short"
         await asyncio.sleep(2)
+        lcd.scroll(0,"This is a very long message to scroll indefinitely", speed=500)
+        await asyncio.sleep(0)
+        lcd.scroll(1,"0123456789ABCDEF0123456789abcdef") # Default scroll rate (400)
+        await asyncio.sleep(30)
+        lcd.scroll(0,"A long message that should be repeated") # Which is the new default!
+        await asyncio.sleep(10)
+        lcd.scroll(0,"This message should be overwritten and repeat")
+        await asyncio.sleep(10)
+
         i = 0
         while True:
             i += 1
-            lcd[0] = "%05d"%i
+            #lcd[0] = "%05d"%i
             lcd[1] = "%016d"%time.ticks_us()
             await asyncio.sleep(5)
     try:

@@ -81,14 +81,14 @@ for i in range (0,100):
     lcd.shl()
 """ 
 maxLen = 16
-longStr = "0123456789ABCDEF0123456789abcdef01234567"
+longStr = "0123456789ABCDEF0123456789abcdef01234567" # 40 chars - max for RAM buffer
 line1 = "0123456789ABCDEF0123456789abcdef01234567"
 
 lcd.clear()
 lcd.puts(line1, x=0, y=0)
 if len(longStr) <= maxLen:
     print("Str <= %d: print" % maxLen)
-    lcd.puts(longStr, x=0, y=0)
+    lcd.puts(longStr, x=0, y=1)
 else:
     print("Str > %d: scroll" % maxLen)
     start = 0

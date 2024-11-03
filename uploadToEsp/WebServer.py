@@ -27,6 +27,7 @@ class WebServer:
         logger.info(const("initialising v%.2f: Data Sources: %s"), version, dataSources)
         self.dataSources = dataSources
         self.docroot = docroot
+        #self.buf = bytearray(2048) # The read buffer!! Gets used for requests and files
 
     def run(self):
         server = asyncio.start_server(self.handle_request, "0.0.0.0", 80)        
@@ -34,16 +35,22 @@ class WebServer:
 
 
     # coroutine to handle HTTP request
+    # Presumably instantiated for every individual client, so that we have to keep buffers etc.
+    # unique and within the scope of this function
     async def handle_request(self, reader, writer):
+        logger.debug(const("entering handle_request rd %s wr %s"), reader, writer)
         peerInfo = ()
         try:
             peerInfo = reader.get_extra_info('peername')
-
+            """
+            readCount = await reader.readinto(self.buf)
+            buf_mv = memoryview(self.buf)            
+            request = RequestParser(buf_mv[0:readCount])            
+            logger.debug("Request:\n%s", buf_mv[0:readCount])
+            """
+            # Horrible reading of large string object, but it works...
             raw_request = await reader.read(2048)
-            
             request = RequestParser(raw_request)
-            
-            logger.debug("Request:\n%s", raw_request)
             
             logger.info(const("Request Info: t: %d client: %s method: %s action: %s URL: %s"),
                          time.time(), peerInfo, request.method, request.get_action(),
@@ -78,7 +85,7 @@ class WebServer:
                 response_builder.serve_static_file(request.url, "/api_index.html")
             
             if response_builder.status != 200:
-                logger.warning(const("Error %d on Request %s"), response_builder.status, raw_request)
+                logger.warning(const("Error %d on Request %s"), response_builder.status, buf_mv[0:readCount])
 
             """
             try/except/finally to handle running out of Heap Memory error,
@@ -92,12 +99,13 @@ class WebServer:
                 await writer.drain()
                 if response_builder.isFile: # It was a file...
                     writeLen = response_builder.contentLen
-                    buf = bytearray(2048)
+                    buf = bytearray(1024)
+                    mv = memoryview(buf)
                     with response_builder.fd as fd:
                         while writeLen > 0:
-                            readLen = fd.readinto(buf)
+                            readLen = fd.readinto(buf) # We have a handy 1024 byte buffer
                             writeLen = writeLen - readLen
-                            writer.write(buf[0:readLen])
+                            writer.write(mv[0:readLen])
                             await writer.drain()
                         fd.close()
                             
@@ -120,11 +128,26 @@ async def main():
     from flashLed import flashLed
     from WiFiConnection import WiFiConnection
     logger.debug(const('WiFiConnection starting...'))
-    if not WiFiConnection.start_station_mode(hostname = "john"):
-        raise RuntimeError('network connection failed')
+    #if not WiFiConnection.start_station_mode(hostname = "john"):
+    #    raise RuntimeError('network connection failed')
+
+    ok = WiFiConnection.start_station_mode()
+    mode = "?"
+    if ok:
+        # Set up as STA
+        # Need to tell people SSID and password
+        mode = "S"
+    else:
+        logger.warning("WiFi STA mode failed, cause %s : trying AP mode", WiFiConnection.statusText)
+        password = 'password'
+        if WiFiConnection.start_ap_mode(ssid="", password=password):
+            logger.warning("WiFi AP mode started as network SSID %s Pwd: %s Server IP: %s", WiFiConnection.ap_ssid, password, WiFiConnection.ap_ip)
+            mode = "A"
+        else:
+            raise RuntimeError('Unable to connect to network or start AP mode')
 
     logger.debug(const("Starting WebServer"))
-    ws = WebServer([getValues])
+    ws = WebServer([getValues], "/webdocs")
     # start web server task
     ws.run()
     
@@ -132,12 +155,12 @@ async def main():
 
     # main task control loop pulses board led
     while True:
-        flashLed.toggle_red_led()
+        #flashLed.toggle_red_led()
         
         await asyncio.sleep(1)
 
 if __name__== "__main__":
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
     # start asyncio task and loop
     try:
         # start the main async tasks
