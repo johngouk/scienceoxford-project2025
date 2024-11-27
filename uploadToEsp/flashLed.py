@@ -41,7 +41,7 @@ class flashLed:
         cls.show_red_led()
 
 async def main():
-        f = flashLed()
+        f = flashLed(invert=True)
         while True:
             await asyncio.sleep(10)
 

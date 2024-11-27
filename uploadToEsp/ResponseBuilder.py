@@ -117,11 +117,6 @@ class ResponseBuilder:
                 self.content_type = fileToContentType[file_type]
             else:
                 self.content_type = fileToContentType['unknown']
-            """
-            # load content
-            file = open(path + "/" + filename)
-            self.set_body(file.read())
-            """
             # set up content
             filenameFull = path + "/" + filename
             self.contentLen = os.stat(filenameFull)[6]
@@ -155,8 +150,6 @@ class ResponseBuilder:
         self.response += "Connection: Closed\r\n"
         self.response += "\r\n"
         # body
-        #if len(self.body) > 0:
-        #    self.response += self.body
         """
             Body now handled using self.fd, passed to something that has
             the output stream handler as well
@@ -169,7 +162,8 @@ class ResponseBuilder:
             200: "OK",
             400: "Bad Request",
             403: "Forbidden",
-            404: "Not Found"
+            404: "Not Found",
+            422: "UnprocessableContent"
         }
         if self.status in status_messages:
             return status_messages[self.status]
@@ -201,5 +195,3 @@ if __name__ == "__main__":
         attr = getattr(rb, attrName)
         if not isinstance(attr, type(dummy.dummyFunc)):
             logger.debug("Attr: %s Value: %s", attrName, attr)
-     
-    

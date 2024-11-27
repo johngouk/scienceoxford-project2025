@@ -1,4 +1,4 @@
-version = 1.0
+version = 1.1 # Now handles "action" URL using a provided actionHandler callback
 
 import asyncio, time, random, logging
 from micropython import const
@@ -10,29 +10,52 @@ logger.record = ESPLogRecord()
 
 from RequestParser import RequestParser
 from ResponseBuilder import ResponseBuilder
+from url_parse import url_parse
 
-"""
-
-    asyncio Server based web server
-        Init'd with an array of data source function callbacks, which provide an
-        dict of Key/Value pairs, which the server will stick into a "/api" readData
-        response, to be used by the JavaScript as required
-        Otherwise attempts to serve files from the "/" directory/subdirectories
-
-"""
 
 class WebServer:
-    
-    def __init__(self, dataSources, docroot="/html"):
+
+    def __init__(self, dataSources, actionHandler, docroot="/html", port=80):
         logger.info(const("initialising v%.2f: Data Sources: %s"), version, dataSources)
+        if actionHandler == None:
+            self.actionHandler = self._actionHandler
+        else:
+            self.actionHandler = actionHandler
         self.dataSources = dataSources
         self.docroot = docroot
-        #self.buf = bytearray(2048) # The read buffer!! Gets used for requests and files
-
-    def run(self):
-        server = asyncio.start_server(self.handle_request, "0.0.0.0", 80)        
+        server = asyncio.start_server(self.handle_request, "0.0.0.0", port)        
         asyncio.create_task(server)
-
+                
+    @classmethod    
+    def _actionHandler (self, action, params):
+        logger.debug(const("actionHandler: action: %s params %s"), action, params)
+        actions = {"network":("hostname","ssid","password"), "message":("MOTD",)}
+        # Check required params
+        if action in actions: # Legal action
+            for x in actions[action]: # Check for param 
+                if x not in params:
+                    logger.debug(const("actionHandler: action %s - param %s not provided"),action, x)
+                    return "" # Leave!
+            # Don't really like hardcoded values here...
+            if action == "network":
+                # Network config
+                # hostname, ssid, password
+                hostname = url_parse(params['hostname'])
+                ssid = url_parse(params['ssid'])
+                password = url_parse(params['password'])
+                # not sure what to do with the hostname for now! Would have to put in NetCreds...
+                if ssid != "" and password != "":
+                    logger.info(const("Network config updated: hostname: %s SSID: %s Pwd: %s"), hostname, ssid, "********")
+            elif action == "message":
+                # MOTD
+                MOTD = url_parse(params['MOTD'])
+                logger.info(const("MOTD updated: %s"), MOTD)
+            return("thanks.html")
+        else:
+            logger.error(const("Action '%s' requested, not implemented"), action)
+        
+        # Fall through to here
+        return "" # Not implemented
 
     # coroutine to handle HTTP request
     # Presumably instantiated for every individual client, so that we have to keep buffers etc.
@@ -42,12 +65,6 @@ class WebServer:
         peerInfo = ()
         try:
             peerInfo = reader.get_extra_info('peername')
-            """
-            readCount = await reader.readinto(self.buf)
-            buf_mv = memoryview(self.buf)            
-            request = RequestParser(buf_mv[0:readCount])            
-            logger.debug("Request:\n%s", buf_mv[0:readCount])
-            """
             # Horrible reading of large string object, but it works...
             raw_request = await reader.read(2048)
             request = RequestParser(raw_request)
@@ -59,40 +76,46 @@ class WebServer:
             response_builder = ResponseBuilder(self.docroot)
 
             # filter out api request
-            if request.url_match("/api"):
-                action = request.get_action()
-                if action == 'readData':
-                    # ajax request for data
-                    response_obj = {
-                        'status': 0
-                        }
-                    for d in self.dataSources:
-                        values = d()
-                        response_obj.update(values)
-                    response_builder.set_body_from_dict(response_obj)
-                    logger.debug(const("Response Body: %s"), response_builder.body)
-                    del response_obj
-                elif False:
-                    pass
+            if request.url_match("/data"):
+                # JS Fetch request for data
+                response_obj = [{'status': 0}]
+                for d in self.dataSources:
+                    values = d()
+                    for k, v in values.items():
+                        response_obj.append({k:v})
+                response_builder.set_body_from_dict(response_obj)
+                logger.debug(const("Response Body: %s"), response_builder.body)
+                del response_obj
+            elif request.url_match("/action"):
+                # Time to do something...
+                if "action" in request.post_data:
+                    action = request.post_data["action"]
+                    returnPage = self.actionHandler(action, request.post_data)
+                    if returnPage == "": # Whoops, unknown action!
+                        logger.error("Action '%s' not implemented or unknown! Fix HTML Form %s", action, request.url)
+                        response_builder.status = 422
+                    else:
+                        response_builder.serve_static_file(returnPage, returnPage)
                 else:
-                    # unknown action
-                    response_builder.set_status(404)
-
-                # response_builder.serve_static_file(request.url, "/api_index.html")
-            # try to serve static file
+                    # Whoops - no action param in returned form values - fix HTML!
+                    logger.error("No Action input element in Form - Fix HTML Form %s", request.url)
+                    response_builder.status = 422
             else:
+                # try to serve static file
                 # ResponseBuilder checks it all out...
-                response_builder.serve_static_file(request.url, "/api_index.html")
+                response_builder.serve_static_file(request.url, "/index.html")
             
             if response_builder.status != 200:
-                logger.warning(const("Error %d on Request %s"), response_builder.status, buf_mv[0:readCount])
+                logger.warning(const("Error %d on Request %s"), response_builder.status, raw_request)
 
             """
             try/except/finally to handle running out of Heap Memory error,
             largely alleviated now by the loop with a fixed length buffer read
+            and deleting local vars
             """
             try:
                 del request
+                del raw_request
                 # build response message
                 response_builder.build_response()
                 writer.write(response_builder.response)
@@ -147,9 +170,9 @@ async def main():
             raise RuntimeError('Unable to connect to network or start AP mode')
 
     logger.debug(const("Starting WebServer"))
-    ws = WebServer([getValues], "/webdocs")
+    ws = WebServer([getValues], None, "/webdocs")
     # start web server task
-    ws.run()
+    #ws.run()
     
     logger.debug(const("Entering main loop"))
 
@@ -160,7 +183,7 @@ async def main():
         await asyncio.sleep(1)
 
 if __name__== "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
     # start asyncio task and loop
     try:
         # start the main async tasks

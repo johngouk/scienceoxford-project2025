@@ -65,7 +65,7 @@ async def main():
     print("fred: creating...")
     fred = DS18B20("1 TestSensor")
     print("fred: running...")
-    fred.run(interval=5)
+    #fred.run(interval=5)
     await asyncio.sleep(1)  # Let things settle down before we get values
     
     # main task control loop pulses board led

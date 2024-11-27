@@ -86,6 +86,4 @@ The WiFiConnection component will output the assigned IP address, and it will al
 
 6.	NeoPixels??
 
-7.	Implement a separate object to flash the on-board LED so that it doesn't clutter the main() and the timing isn't naff; **did this, broke it!**
-
-8.	Weather forecast from accuweather? Another topic to rotate on the display! Only if STA mode on local network
+7.	Weather forecast from accuweather? Another topic to rotate on the display! Only if STA mode on local network

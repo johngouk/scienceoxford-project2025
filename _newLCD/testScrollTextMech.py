@@ -16,6 +16,8 @@ class LCD():
         self.dirty = [False] * self.rows
         self._scrolling = [False] * self.rows
         self._scrollTask = [None] * self.rows
+        self._displayingList = [False] * self.rows
+        self._displayListTask = [None] * self.rows
         #print("init: _scrollTask: %s _scrolling: %s " % (self._scrollTask, self._scrolling))
 
         asyncio.create_task(self.runlcd())
@@ -39,12 +41,16 @@ class LCD():
             await asyncio.sleep_ms(20)  # Give other coros a look-in
             
     def _checkKillScroll(self, line):
-        print("cKS: line: %d scr?: %s task: %s" % (line, self._scrolling[line], self._scrollTask[line]))
+        #print("cKS: line: %d" % line)
         if self._scrolling[line] and self._scrollTask[line] != None:
             # Kill the existing task
-            self._scrollTask[line].cancel() # This might be a coro, and require await
+            self._scrollTask[line].cancel()
             self._scrollTask[line] = None
             self._scrolling[line] = False
+        if self._displayingList[line] and self._displayListTask[line] != None:
+            self._displayListTask[line].cancel()
+            self._displayListTask[line] = None # Keep things tidy!
+            self._displayingList[line] = False            
                    
     async def run_scroll(self, line, message, speed, times):
         # Speed - delay in msec; times - number of scroll repeats, -1 forever
@@ -129,6 +135,33 @@ class LCD():
         """Get the indicated line buffer contents"""
         return self.lines[line]
 
+    def displayList(self, line, itemList, interval):
+        """Displays the list items in rotation, at interval rate, on the specified line; list items can
+            be type str (strings!) or a function that returns strings
+        """
+        if line >= self.rows:
+            logger.error("displayList: line %d specified, only %d rows!", line, self.rows)
+            return
+        if len(itemList) <= 0:
+            logger.warning("displayList: Empty itemlist!")
+            return
+        self._checkKillScroll(line)
+        self._displayingList[line] = True
+        self._displayListTask[line] = asyncio.create_task(self._runDisplayList(line, itemList, interval))
+
+    async def _runDisplayList(self, line, itemList, interval):
+        while True and self._displayingList[line]:
+            for i in range(len(itemList)):
+                if not self._displayingList[line]:
+                    break
+                if not isinstance(itemList[i], str):
+                    # Assumes function that returns str; assumes function takes index parameter
+                    s = itemList[i](i)
+                else:
+                    s = itemList[i]
+                self._setline(line, s) # Avoid the call to checkKillScroll!
+                await asyncio.sleep(interval)
+        
 if __name__ == "__main__":
     """"Test LCD driver:
         Write init msg, then a string that is too long
@@ -136,6 +169,11 @@ if __name__ == "__main__":
         row 0 - "nnnnn" incrementing counter
         row 1 - "UUUUUUUUUUUUUUUU" nanosecs tick
     """
+        
+    def item(i):
+        v = ("item0str","item1str","item2str")
+        return v[i]
+    
     async def main():
         #lcd[0] = "Starting..."
         #await asyncio.sleep(2)
@@ -162,13 +200,27 @@ if __name__ == "__main__":
 
         gc.collect()
         start = gc.mem_free()
-        lcd.scroll_wrap(0,"0123456789A123456789B123456789", speed=500, times=2)
+        lcd.scroll_wrap(0,"0123456789A123456789B123456789", speed=500, times=1)
         await asyncio.sleep(0)
-        for i in range(10):
+        for i in range(4):
             await asyncio.sleep(5)
             gc.collect()
             now = gc.mem_free()
             print("wrap scroll: Used: %d" % (start - now))
+            
+        print("Testing string displayList")
+        lcd.displayList(1, ("item0", "item1", "item2"), 1)
+        await asyncio.sleep(30)
+
+        lcd[1] = "Direct show value"
+        await asyncio.sleep(3)
+
+        print("Testing function displayList")
+        lcd.displayList(1, (item, item, item), 1)
+        await asyncio.sleep(10)
+
+        lcd[1] = "Direct show value"
+        await asyncio.sleep(3)
         
     try:
         lcd = LCD() # Default values

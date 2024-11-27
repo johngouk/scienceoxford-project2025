@@ -1,6 +1,6 @@
 # class to handle WiFi connection, and update the RTC!
 
-version = 1.0
+version = 1.1
 
 from micropython import const
 import time
@@ -37,7 +37,7 @@ if ESP32:
 class WiFiConnection:
     # class level vars accessible to all code
     #status = network.STAT_IDLE
-    statusText = "NO_STATUS_MSG"
+    statusText = const("NO_STATUS_MSG")
     ssid = ""
     st_ip = ""
     ap_ip = ""
@@ -73,6 +73,13 @@ class WiFiConnection:
         self.st = network.WLAN(network.STA_IF)
         self.st.active(st)
         
+    @classmethod
+    def setNetCreds(self, ssid, password):
+        NetworkCredentials.setNetCreds(ssid, password)
+        
+    @classmethod
+    def getNetCreds(self):
+        return NetworkCredentials.getNetCreds()
     
     @classmethod
     def setHostname (self, hostname=""):
@@ -84,6 +91,7 @@ class WiFiConnection:
     def start_ap_mode(self, hostname="", ssid="", password=""):
         self._startInterfaces(self, st=False, hostname=hostname)
         self.ap.config(essid=ssid, authmode=network.AUTH_WPA_WPA2_PSK, password=password)
+        self.hostname = network.hostname()
         self.ap_ip = self.ap.ifconfig()[0]
         self.ap_ssid = self.ap.config('ssid')
         logger.info(const("WiFi AP: SSID: %s Pwd: '%s' IP: %s"), self.ap_ssid, password, self.ap_ip)
@@ -95,16 +103,17 @@ class WiFiConnection:
         self._startInterfaces(self, ap=False, hostname=hostname)
         # connect to wifi network
         # If we're already connected but not to the right one, disconnect first
+        creds = NetworkCredentials.getNetCreds()
         if self.st.isconnected():
             currentSsid = self.st.config('ssid')
-            if currentSsid != NetworkCredentials.ssid:
+            if currentSsid != creds[0]:
                 self.st.disconnect()
                 while self.st.isconnected():
                     time.sleep(0.1)
         # Start again...
         if not (self.st.isconnected()):
-            logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), NetworkCredentials.ssid, '********')
-            self.st.connect(NetworkCredentials.ssid, NetworkCredentials.password)
+            logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), creds[0], '********')
+            self.st.connect(creds[0], creds[1])
             max_wait = 10
             # wait for connection - poll every 0.5 secs
             while max_wait > 0:
@@ -147,13 +156,14 @@ if __name__ == "__main__":
     logger.record = ESPLogRecord()
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
     print("****** Starting STA mode ******")
+    WiFiConnection.setNetCreds('norcot', 'nor265cot')
     #ok, info = WiFiConnection.start_station_mode() # Use default hostname
     ok = WiFiConnection.start_station_mode() # Use default hostname
     w = WiFiConnection()
-    print("Result:", ok, "Info:", w.st_ssid, w.st_ip, w.hostname)
+    print("Result:", ok, "Info:", w.ssid, w.st_ip, w.hostname)
     print("****** Starting AP mode ******")
     #ok, errorMsg = WiFiConnection.start_ap_mode()
-    ok = WiFiConnection.start_ap_mode(password="nor265cot")
+    ok = WiFiConnection.start_ap_mode(password="thePassword")
     w = WiFiConnection()
     print("Result:", ok, "Info:", w.ap_ssid, w.ap_ip, w.hostname)
     print("Test getIp: %s" % WiFiConnection.getIp())

@@ -14,7 +14,7 @@
     1.2 Using modified sensor & LCD versions
     1.3 Moved flashLed code to separate coro in flashLed class - NEEDS FIXING
     1.4 Added a Button on Pin, only announces presses for now
-    1.5 Added web action handler - url /action + field "action"=<action> + params
+    1.5 Added web action handler - url /action + field "action"=<action> + params; removed WebServer.run()
     
 
 """
@@ -50,7 +50,9 @@ from printMem import printMem
 from button.pushbutton import Pushbutton
 from url_parse import url_parse
 
-
+"""
+    Following "wait_..." functions temporary placeholders for actual button actions
+"""
 async def wait_press(e, lcd):
     while True:
         await e.wait()
@@ -70,6 +72,10 @@ async def wait_double(e, lcd):
         e.clear()
         print("Double Event!")
         
+"""
+    actionHandler() - likely to be moved to a separate Controller object, which will also process
+        the button presses in a MVC-type model
+"""
 # Handler for web "action" page accesses
 def actionHandler(action, params):
     actions = {"network":("hostname","ssid","password"), "message":('message')}
@@ -107,8 +113,7 @@ def actionHandler(action, params):
 
     main
     - starts all the different coroutines
-    - Continuously runs to maintain everything
-    - flashes the LED on the board every 1 sec to show it's working
+    - Continuously runs to maintain everything - when this exists, everything else does
 
 ************************************************
 """
@@ -182,7 +187,6 @@ async def main():
 
     # 5
     ws = WebServer([ds.getValues], actionHandler, "/webdocs") # default to port 80
-    #ws = WebServer([getValues], "/webdocs")
         
     # 6
     # main task control loop
