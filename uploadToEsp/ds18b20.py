@@ -15,7 +15,7 @@ from sensors.Sensor import Sensor
 
 class DS18B20(Sensor):
 
-    def __init__(self, interval = 5, name = "DS18B20", pin=26):
+    def __init__(self, interval = 5, name = "DS18B20", pin=13):
         super().__init__(interval=interval, name=name)
         logger.info(const("initialising sensor(s) on pin %d"), pin)
         logger.debug(const("initialising OneWire on Pin %d"), pin)
