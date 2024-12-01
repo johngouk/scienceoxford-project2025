@@ -7,7 +7,8 @@ The current proposal is:
 * an ESP32
 * a bunch of sensors, to be decided 
 	* this one is using 2x DS18B20s on a single pin
-* an LCD, which shows
+	* the target one is a ENS160/AHT21 combo on a single dev board
+* an LCD, which shows various values etc. as most recenlyt coded e.g.
 	* IP address
 	* alternately GC mem_free, and sensor output
 * a webserver, with all the html/js/css loaded on to the ESP32
@@ -28,37 +29,39 @@ The software is configured to use:
 	
 *	One or more DS18B20s, attached using the non-parasitic power mode to GPIO26, and a 4R7 resistor between VCC and the data pin, although it seems to work without it (!)
 
+*	Shortly, a paired ENS160, for CO2/VOC readings, and AHT21, for Temp/RH - the latter will be used to calibrate the ENS160, attached using I2C on pins 25/26
+
 *	A pushbutton, connected to pin17, which just prints one of "Press event", "Double event" or "Long event" as appropriate on the Thonny REPL console
 
 You'll have to consult your own ESP dev board instructions to work out which Dx pins are attached to which actual Espressif GPIOnn pins.
 ## Software Instructions ##
 
 1.	Clone the repository or download everything onto your computer
-2.	Attach the ESP32/8266 to your computer with your choice of USB data cable
+2.	Attach the ESP32 to your computer with your choice of USB data cable
    	
    	**Caution! You may need additional USB drivers for some UARTs, especially the WCH family**
   	
-3.	Using something like Thonny or Mu
+3.	Using something like Thonny or Mu (the instructions are for Thonny)
 
-	 a.	Connect to the attached ESP using "Preferences|Interpreter"
+	 a.	Connect to the attached ESP using "Preferences|Interpreter" - not sure what they are in Windows, but find the Interpreter tab!
 	 
-	 b.	Select the right mode (ESP32/ESP8266) in your editor, and the right serial port
+	 b.	Select the right mode (ESP32) in your editor, and the right serial port
 	 
-	 c.	If necessary, use the tool to install micropython on the device 
+	 c.	Install micropython on the device, using the facilities of the tool (Update or Install Micropython)
 	 
-	 d. Direct the tool to the downloaded folder
+	 d. Adjust the Thonny View to show Files and Shell - this aids enormously with the next steps!
 	 
-	 e.	Edit the `uploadToEsp/NetworkCredentials.py` file to contain your network SSID/password.
+	 e.	Direct the Files window to the downloaded folder in the This computer section of the Files window
 	 
-	 f.	Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/"
+	 f.	Edit the `uploadToEsp/NetworkCredentials.py` file to contain your network SSID/password.
 	 
-	 g.	You now need to install the additional micropython-lib libs using `mip`. Switch focus back to the download root folder, and execute the `imstallLogging.py` script. This will install the `logging` and additional `time` modules on the ESP for use. You should see a `lib/` directory in the ESP root folder. 
-	
-4.	From the download root folder, open the most recent `main_n.m.py` file and adjust the logging settings by modifying the line `logging.basicConfig(level=logging.INFO...`, below the line `ADJUST LOG LEVEL HERE` to use whatever level you want - DEBUG is good if you want to see what's happening.
+	 g.	Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/". You should see a list of files/folders appear in the MicroPython Device Files window - this is the root folder of the ESP32.
+	 	
+4.	From the download root folder in This computer, open the most recent `main_n.m.py` file and adjust the logging settings by modifying the line `logging.basicConfig(level=logging.INFO...`, below the line `ADJUST LOG LEVEL HERE` to use whatever level you want - DEBUG is good if you want to see what's happening.
 5.	With the `main_n.m.py` file open and in focus in the IDE, click on the green *Run* button on the toolbar; the main.py should be uploaded and run. 
 
 	Depending on your dev board, 
-	*	The on-board LED should flash on and off at approximately 1Hz. **Currently broken!**
+	*	The on-board LED should flash on and off at approximately 1Hz.
 	*	The LCD should show "Starting vn.m..."
 	*	switch to showing the device's IP address on row0, and on row1 the mode ("S" or "A") with the SSID and then Hostname for 5 seconds each
 	*	switch to the sensor(s) value(s) on row1, with each sensor name/value being shown for 1 second on rotation
@@ -68,7 +71,7 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	 
 ## Web Server Interface ##
 
-The WiFiConnection component will output the assigned IP address, and it will also appear on the top line of the display. The default hostname will be "mpy-esp32.local" for ESP32, and "???" for ESP8266. Direct your browser to this location (`http://<IpAddress>`) and you should see the home page, which currently displays two gauges, one for each temperature sensor detected on the OneWire bus.
+The WiFiConnection component will output the assigned IP address, and it will also appear on the top line of the display. The default hostname will be "mpy-esp32.local" for ESP32. Direct your browser to this location (`http://<IpAddress>`) and you should see the home page, which currently displays two gauges, one for each temperature sensor detected on the OneWire bus.
 	
 ## To Do ##
 1.	Implement a central controller that 
