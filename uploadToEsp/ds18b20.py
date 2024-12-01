@@ -17,15 +17,19 @@ class DS18B20(Sensor):
 
     def __init__(self, interval = 5, name = "DS18B20", pin=13):
         super().__init__(interval=interval, name=name)
-        logger.info(const("initialising sensor(s) on pin %d"), pin)
-        logger.debug(const("initialising OneWire on Pin %d"), pin)
+        self.pin = pin
+        self.values = {}
+        
+    def _init(self, state):
+        logger.info(const("initialising sensor(s) on pin %d"), self.pin)
+        logger.debug(const("initialising OneWire on Pin %d"), self.pin)
         try:
-            ow = onewire.OneWire(Pin(pin)) # create a OneWire bus on GPIO12
+            ow = onewire.OneWire(Pin(self.pin)) # create a OneWire bus on GPIO12
         except Exception as e:
-            logger.error("Error %s initialising DS18B20 OneWire - check pins: %d", e, pin)
+            logger.error("Error %s initialising DS18B20 OneWire - check pins: %d", e, self.pin)
             raise e
         try:
-            logger.debug(const("initialising ds18x20 on Pin %d"), pin)
+            logger.debug(const("initialising ds18x20 on Pin %d"), self.pin)
             self.ds = ds18x20.DS18X20(ow)
             logger.debug(const("scanning for ds18x20s..."))
             self.roms = self.ds.scan()
@@ -33,11 +37,8 @@ class DS18B20(Sensor):
         except Exception as e:
             logger.error("Error %s initialising DS18B20 instance", e)
             raise e
-        self.values = {}
-        self.sa = ""
-        # Need to do this after all init completed!
-        self.run()
-
+        return 0, 0 # No pauses required to make this sensor work
+    
     # SubClass data collection function implementation
     def _collectData(self, state):
         logger.debug(const("_collectData from DS18B20"))
@@ -51,11 +52,8 @@ class DS18B20(Sensor):
             dev = 0
             for rom in self.roms:
                 temp = self.ds.read_temp(rom)
-                self.values["temp"+str(dev)] = temp
+                self.values["DS18B20_temp_"+str(dev)] = temp
                 dev += 1
-            self.sa = []
-            for k in self.values.keys():
-                self.sa.append(k+':'+str("{:2.2f}").format( self.values[k]))
             logger.debug(const("Values: %s"), str(self.values))
             return 0, 0 # All done
         
@@ -63,9 +61,8 @@ class DS18B20(Sensor):
 # main coroutine to boot async tasks
 async def main():
     print("fred: creating...")
-    fred = DS18B20("1 TestSensor")
+    fred = DS18B20()
     print("fred: running...")
-    #fred.run(interval=5)
     await asyncio.sleep(1)  # Let things settle down before we get values
     
     # main task control loop pulses board led

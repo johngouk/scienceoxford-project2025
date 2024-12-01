@@ -26,9 +26,13 @@ MicroPython driver for the AHT10 and AHT20 Humidity and Temperature Sensor
 
 Author(s): Andreas Bühl, Kattni Rembor
 
+Modified: John Gouk
+    Now includes asyncio-based waits to be compatible with an asyncio-based framework
+
 """
 
-import utime
+import time
+import asyncio
 from micropython import const
 
 
@@ -43,7 +47,8 @@ class AHT10:
     AHTX0_STATUS_CALIBRATED = const(0x08)  # Status bit for calibrated
 
     def __init__(self, i2c, address=AHTX0_I2CADDR_DEFAULT):
-        utime.sleep_ms(20)  # 20ms delay to wake up
+        self._waitEvent = asyncio.Event() # Set this up so the following call works
+        self._wait(20)  # 20ms delay to wake up
         self._i2c = i2c
         self._address = address
         self._buf = bytearray(6)
@@ -57,7 +62,7 @@ class AHT10:
         """Perform a soft-reset of the AHT"""
         self._buf[0] = self.AHTX0_CMD_SOFTRESET
         self._i2c.writeto(self._address, self._buf[0:1])
-        utime.sleep_ms(20)  # 20ms delay to wake up
+        self._wait(20)  # 20ms delay to wake up
 
     def initialize(self):
         """Ask the sensor to self-initialize. Returns True on success, False otherwise"""
@@ -65,7 +70,7 @@ class AHT10:
         self._buf[1] = 0x08
         self._buf[2] = 0x00
         self._i2c.writeto(self._address, self._buf[0:3])
-        self._wait_for_idle()
+        self._wait_for_idle(5)
         if not self.status & self.AHTX0_STATUS_CALIBRATED:
             return False
         return True
@@ -88,7 +93,7 @@ class AHT10:
 
     @property
     def temperature(self):
-        """The measured temperature in degrees Celcius."""
+        """The measured temperature in degrees Celsius."""
         self._perform_measurement()
         self._temp = ((self._buf[3] & 0xF) << 16) | (self._buf[4] << 8) | self._buf[5]
         self._temp = ((self._temp * 200.0) / 0x100000) - 50
@@ -105,15 +110,31 @@ class AHT10:
         self._buf[2] = 0x00
         self._i2c.writeto(self._address, self._buf[0:3])
 
-    def _wait_for_idle(self):
+    async def _wait_for_idle(self, msToWait):
+        asyncio.create_task(_waitForIdleLoop(msToWait))
+        await self._waitEvent.wait()
+        self._waitEvent.clear()
+
+    async def _waitForIdleLoop(self, msToWait):
         """Wait until sensor can receive a new command"""
         while self.status & self.AHTX0_STATUS_BUSY:
-            utime.sleep_ms(5)
+            await asyncio.sleep_ms(msToWait)
+        self._waitEvent.set()
+        
+    async def _wait(self, msToWait):
+        asyncio.create_task(_waitForABit(msToWait))
+        await self._waitEvent.wait()
+        self._waitEvent.clear()
+
+    async def _waitForABit(self, msToWait):
+        """Wait for a bit"""
+        await asyncio.sleep_ms(msToWait)
+        self._waitEvent.set()
 
     def _perform_measurement(self):
         """Trigger measurement and write result to buffer"""
         self._trigger_measurement()
-        self._wait_for_idle()
+        self._wait_for_idle(5)
         self._read_to_buffer()
 
 

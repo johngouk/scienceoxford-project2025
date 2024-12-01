@@ -46,8 +46,12 @@ class ENS160AHT21(Sensor):
     # SubClass data collection function implementation
     def _collectData(self, state):
         logger.debug(const("_collectData from ENS160ATH21"))
-        # This is a simple sensor - no setup commands
-        aqi, tvoc, eco2, temp, rh, eco2_rating, tvoc_rating, temp_raw = self.sensor_ens160.read_air_quality()
+        temp_aht21 = self.sensor_aht21.temperature  # Apply offset
+        rh_aht21 = self.sensor_aht21.relative_humidity
+        self.values['AHT_Temp'] = temp_aht21
+        self.values['AHT_RH'] = rh_aht21
+        self.sensor_ens160.set_envdata(temp_aht21,rh_aht21)
+        aqi, tvoc, eco2, temp, rh, eco2_rating, tvoc_rating = self.sensor_ens160.read_air_quality()
         self.values['AQI'] = aqi
         self.values['TVOC'] = tvoc
         self.values['ENS_Temp'] = temp
@@ -55,10 +59,6 @@ class ENS160AHT21(Sensor):
         self.values['ECO2_Rating'] = eco2_rating
         self.values['TVOC_Rating'] = tvoc_rating
         # Read temperature and humidity from AHT21
-        temp_aht21 = self.sensor_aht21.temperature  # Apply offset
-        rh_aht21 = self.sensor_aht21.relative_humidity
-        self.values['AHT_Temp'] = temp_aht21
-        self.values['AHT_RH'] = rh_aht21
         logger.debug(const("Values: %s"), self.values)
         return 0, 0 # All done
         
@@ -66,7 +66,7 @@ class ENS160AHT21(Sensor):
 # main coroutine to boot async tasks
 async def main():
     print("fred: creating...")
-    fred = ENS160AHT21(name="1 TestSensor")
+    fred = ENS160AHT21(name="ENS160AHT21")
     print("fred: running...")
     #fred.run(interval=5)
     await asyncio.sleep(1)  # Let things settle down before we get values
@@ -74,7 +74,7 @@ async def main():
     # main task control loop pulses board led
     while True:
         print("TestSensor values:", fred.getValues())
-        await asyncio.sleep(1)
+        await asyncio.sleep(10)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
