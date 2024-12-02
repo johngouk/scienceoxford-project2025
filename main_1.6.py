@@ -3,6 +3,7 @@
     SciOx Project for ESP
     Runs
     - a bunch of sensors, to be decided, but this one is using 2x DS18B20s on a single pin
+    - an ENS160 & AHT21 combo, providing CO2/VOC data and Temp/RH respectively
     - an LCD, which shows
         - line0: IP address
         - line1: sensor outputs, rotating every second
@@ -12,7 +13,7 @@
     1.0 Clean version for SciOxPyConf
     1.1 Moved everything into main
     1.2 Using modified sensor & LCD versions
-    1.3 Moved flashLed code to separate coro in flashLed class - NEEDS FIXING
+    1.3 Moved flashLed code to separate coro in flashLed class
     1.4 Added a Button on Pin, only announces presses for now
     1.5 Added web action handler - url /action + field "action"=<action> + params; removed WebServer.run()
     1.6 Added ENS160AHT21 sensor - very cool
@@ -185,10 +186,11 @@ async def main():
     await asyncio.sleep(5) # Let people read the IP/Hostname
 
     # 4
-    ds = DS18B20(interval=10) # Update sensor values every 10 seconds
+    ds = DS18B20(interval=10, pin=33) # Update sensor values every 10 seconds
     #ens = ENS160AHT21(interval = 30)
 
     # 5
+    # Yeah yeah, we'll get to the CO2 sensor in a bit when the asyncio init is fixed...
     #ws = WebServer([ds.getValues,ens.getValues], actionHandler, "/webdocs") # default to port 80
     ws = WebServer([ds.getValues], actionHandler, "/webdocs") # default to port 80
         
