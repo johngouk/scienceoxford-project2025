@@ -39,19 +39,24 @@ try:
     from ESPLogRecord import ESPLogRecord
     logger.record = ESPLogRecord()
 except ImportError:
+    print('Unable to import ESPLogRecord!!')
     pass
 
-from RequestParser import RequestParser
-from ResponseBuilder import ResponseBuilder
-from WiFiConnection import WiFiConnection
-from LCD import LCD
 from flashLed import flashLed
-from WebServer import WebServer
-from ds18b20 import DS18B20
-#from ens160aht21 import ENS160AHT21
 from printMem import printMem
+
+from lcd.LCD import LCD
+
+from web.WebServer import WebServer
+from web.url_parse import url_parse
+
+from sensors.ds18b20 import DS18B20
+from sensors.ens160aht21 import ENS160AHT21
+
 from button.pushbutton import Pushbutton
-from url_parse import url_parse
+
+# Note that you can't use the module name "network" for your own stuff - Python has already used it! 
+from networking.WiFiConnection import WiFiConnection
 
 """
     Following "wait_..." functions temporary placeholders for actual button actions
@@ -187,12 +192,12 @@ async def main():
 
     # 4
     ds = DS18B20(interval=10, pin=33) # Update sensor values every 10 seconds
-    #ens = ENS160AHT21(interval = 30)
+    ens = ENS160AHT21(interval = 30)
 
     # 5
     # Yeah yeah, we'll get to the CO2 sensor in a bit when the asyncio init is fixed...
-    #ws = WebServer([ds.getValues,ens.getValues], actionHandler, "/webdocs") # default to port 80
-    ws = WebServer([ds.getValues], actionHandler, "/webdocs") # default to port 80
+    ws = WebServer([ds.getValues,ens.getValues], actionHandler, "/webdocs") # default to port 80
+    #ws = WebServer([ds.getValues], actionHandler, "/webdocs") # default to port 80
         
     # 6
     # main task control loop

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 from ESPLogRecord import ESPLogRecord
 logger.record = ESPLogRecord()
 
-from NetworkCredentials import NetworkCredentials
+from networking.NetworkCredentials import NetworkCredentials
 
 # Taken from ESP32 Micropython network module
 statusCodes = {

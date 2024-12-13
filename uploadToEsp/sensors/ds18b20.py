@@ -16,11 +16,12 @@ from sensors.Sensor import Sensor
 class DS18B20(Sensor):
 
     def __init__(self, interval = 5, name = "DS18B20", pin=13):
-        super().__init__(interval=interval, name=name)
+        logger.info(const("_init_ called"))
         self.pin = pin
         self.values = {}
+        super().__init__(interval=interval, name=name)
         
-    def _init(self, state):
+    async def _init(self):
         logger.info(const("initialising sensor(s) on pin %d"), self.pin)
         logger.debug(const("initialising OneWire on Pin %d"), self.pin)
         try:
@@ -37,31 +38,26 @@ class DS18B20(Sensor):
         except Exception as e:
             logger.error("Error %s initialising DS18B20 instance", e)
             raise e
-        return 0, 0 # No pauses required to make this sensor work
+        return True # No pauses required to make this sensor work
     
     # SubClass data collection function implementation
-    def _collectData(self, state):
+    async def _collectData(self):
         logger.debug(const("_collectData from DS18B20"))
-        pause = 0.100
-        if state == 0:
-            # first time through
-            state = 1
-            self.ds.convert_temp()
-            return pause, state
-        elif state == 1:
-            dev = 0
-            for rom in self.roms:
-                temp = self.ds.read_temp(rom)
-                self.values["DS18B20_temp_"+str(dev)] = temp
-                dev += 1
-            logger.debug(const("Values: %s"), str(self.values))
-            return 0, 0 # All done
-        
+        self.ds.convert_temp()
+        await asyncio.sleep_ms(100)
+        dev = 0
+        for rom in self.roms:
+            temp = self.ds.read_temp(rom)
+            self.values["DS18B20_temp_"+str(dev)] = temp
+            dev += 1
+        logger.debug(const("Values: %s"), str(self.values))
+        return True # All done
+    
         
 # main coroutine to boot async tasks
 async def main():
     print("fred: creating...")
-    fred = DS18B20()
+    fred = DS18B20(pin=33)
     print("fred: running...")
     await asyncio.sleep(1)  # Let things settle down before we get values
     

@@ -1,7 +1,7 @@
 """Implements a HD44780 character LCD connected via PCF8574 on I2C.
    This was tested with: https://www.wemos.cc/product/d1-mini.html"""
 
-from lcd_api import LcdApi
+from lcd.lcd_api import LcdApi
 from time import sleep_ms
 
 # The PCF8574 has a jumper selectable address: 0x20 - 0x27

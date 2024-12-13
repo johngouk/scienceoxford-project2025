@@ -8,9 +8,9 @@ from ESPLogRecord import ESPLogRecord
 logger.record = ESPLogRecord()
 
 
-from RequestParser import RequestParser
-from ResponseBuilder import ResponseBuilder
-from url_parse import url_parse
+from web.RequestParser import RequestParser
+from web.ResponseBuilder import ResponseBuilder
+from web.url_parse import url_parse
 
 
 class WebServer:

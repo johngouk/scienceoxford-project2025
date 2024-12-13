@@ -53,9 +53,11 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	 
 	 e.	Direct the Files window to the downloaded folder in the This computer section of the Files window
 	 
-	 f.	Edit the `uploadToEsp/NetworkCredentials.py` file to contain your network SSID/password.
+	 f.	Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/". You should see a list of files/folders appear in the MicroPython Device Files window - this is the root folder of the ESP32.
 	 
-	 g.	Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/". You should see a list of files/folders appear in the MicroPython Device Files window - this is the root folder of the ESP32.
+	 I have found recently that this "all at once" approach sometimes fails, or at least, overpopulates the ESP file system root with copied files. In that case, delete everything from the ESP32, and copy each directory in turn, followed by any files not in the folders.
+	 
+	 g.	From the Thonny Micropython device file window, edit the `uploadToEsp/NetCreds.json` file to contain your network SSID/password. If you plan to make source changes, and you've cloned the repository, when you push back to GitHub, the whole world will know your credentials. This a Bad Thing, right? So **EDIT THE NETCREDS FILE ON THE ESP32!!**
 	 	
 4.	From the download root folder in This computer, open the most recent `main_n.m.py` file and adjust the logging settings by modifying the line `logging.basicConfig(level=logging.INFO...`, below the line `ADJUST LOG LEVEL HERE` to use whatever level you want - DEBUG is good if you want to see what's happening.
 5.	With the `main_n.m.py` file open and in focus in the IDE, click on the green *Run* button on the toolbar; the main.py should be uploaded and run. 
@@ -81,7 +83,7 @@ The WiFiConnection component will output the assigned IP address, and it will al
 
 2.	Make the button change the LCD displayed values, either for a short period or toggle around the options; maybe an Easter Egg for the student to programme??! Single, Long and Double presses available, could be Short - toggle round display; Double - change to something e.g. forecast?; Long - Easter egg? Restart?? 
 
-3.	A web page to configure the SSID/Password that is accessible from the AP mode
+3.	A web page to configure the SSID/Password that is accessible from the AP mode; I have done this (http://<esp32IP>/config.html), but I haven't put in a system restart.
 
 4.	Decide on what we want to show on the LCD!
 

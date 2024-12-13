@@ -39,7 +39,7 @@ try:
 except ImportError:
     pass
 
-from esp8266_i2c_lcd import I2cLcd
+from lcd.esp8266_i2c_lcd import I2cLcd
 
 class LCD(I2cLcd):
 

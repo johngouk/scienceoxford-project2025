@@ -52,150 +52,116 @@ class Sensor:
             #logger.debug(const("This is the super class!!"))
             pass
         '''
+        # Set up all your values before kicking things off...
         self.name = name
         self.values = {}			# This is what is returned by getValues()
         self.interval = interval	# Pause time between data collections
-        self._ready = True
-        asyncio.create_task(self.taskToRun(self.interval))
+        asyncio.create_task(self.taskToRun())
+        logger.debug(const("taskToRun taskToRun task created"))
+
+    def _getUsecStr(self, ns):
+        nsStr = str(ns)
+        return nsStr[:len(nsStr)-3]
         
-    async def taskToRun(self, interval):
+    async def taskToRun(self):
         """
-        taskToRun
-        Performs any sensor-specific initialisation, because many need pauses in this process
-            which can only be handled from inside an async def function, using asyncio.sleep[_ms]()
-        Calls the actual data collection routine from a "while True" loop
-            with an asyncio.sleep for the interval value
-        interval: seconds to sleep
-        
-        In order to permit the called _init and _collectData functions to perform multiple steps
-            to get a reading, they return a tuple (pause, state) where
-        pause: seconds to wait before invoking _init/_collectData again
-        state: the current state of _init/_collectData, so they can know what the next step is when
-                invoked again        
+            taskToRun
+                Uses two async tasks
+                _init() - takes what it takes to complete
+                _collectData() - likewise
         """
-        logger.debug(const("taskToRun entered: interval: %d"), interval)
-        # Save the interval!
-        self.interval = interval
-        # _init() has to cope with sensors that require substantial wait intervals during
-        # initialisation. This loop calls _init() until it returns a 0s payse interval
-        # to indicate it has completed.
-        pause_s = 0
-        state = 0
-        pause_s, state = self._init(state)
-        logger.debug(const("taskToRun init loop: state: %d pause: %d"), state, pause_s)
-        while pause_s > 0:
-            await asyncio.sleep(pause_s)
-            pause_s, state = self._init(state)
-            logger.debug(const("taskToRun init loop: state: %d pause: %d"), state, pause_s)
+        logger.debug(const("taskToRun entered: interval: %d"), self.interval)
+        # Perform initialisation through _init task
+        start = time.time_ns()
+        task = asyncio.create_task(self._init())
+        logger.debug(const("taskToRun _init task created"))
+        result = await asyncio.wait_for(task, None)
+        logger.debug('taskToRun: _init execute %s us', self._getUsecStr(time.time_ns() - start))
+        if not result: # for the demo always True
+            logger.error('taskToRun: init error: %s', result)
+            return # give up
         self._ready = True
         # Get on with the data collection task...        
         while True:
-            # Restore the interval!
-            interval = self.interval
+            start = time.time_ns()
             logger.debug(const("taskToRun executing"))
-            # _collectData() has to deal with sensors that have initialisation times,
-            # so we need to keep calling _collectData() as long as it needs one...
-            pause_s = 0
-            state = 0
-            pause_s, state = self._collectData(state)
-            while pause_s > 0:
-                interval = interval -  pause_s
-                if interval < 0: interval = 0
-                # THe sensor needs a startup time... wait for it
-                # note that _collectData has to return its state!!
-                logger.debug(const("taskToRun pausing: Pause:%d"), pause_s)
-                await asyncio.sleep(pause_s)
-                pause_s, state = self._collectData(state)
-            logger.debug(const("taskToRun pausing: Pause:%d"), interval)
-            await asyncio.sleep(interval)
+            task = asyncio.create_task(self._collectData())
+            result = await asyncio.wait_for(task, None)
+            # Should do something with the result...
+            end = time.time_ns()
+            exec_ns = end - start
+            exec_ms = int(self._getUsecStr(exec_ns))/1000
+            logger.debug('taskToRun: _collectData execute %s us %d ms', self._getUsecStr(exec_ns), exec_ms)
+            # Restore the interval!
+            exec_ns = time.time_ns() - start
+            waitTime = (self.interval*1000) - (exec_ns/1000000)        
+            await asyncio.sleep_ms(int(waitTime))
 
-    def _init(self, state):
+    async def _init(self):
         '''
             REPLACE WITH YOUR SubClass METHOD!! This is just demo code!!
             
-            _init - Initialises the sensor, called repeatedly until it returns 0,0,
-                otherwise returns state, waitTimeSec (can be a fraction for ms)
+            _init - runs as a separate asyncio task, performs all init wait actions with asyncio.sleep[_ms]()
+            
         '''
+        demoInitPause = 100 # You need to get rid of these!
+        demoInitTimes = 10
         logger.debug(const("_init executing: State:%d"), state)
-        if state == 0:
-            logger.debug(const("_init: first pass: State:%d"), state)
-            state = 1
-            pause_s = 2
-        elif state == 1:
-            logger.debug(const("_init: second pass: State:%d"), state)
-            state = 2
-            pause_s = 5
-        else: # Any other value
-            logger.debug(const("_init: final pass: State:%d"), state)
-            state = 0
-            pause_s = 0
-        # Just in case...
-        return pause_s, state
+        demoInitPause = 100
+        for state in range(demoInitTimes):
+            logger.debug('_init state: %d pause: %d', state, demoInitPause)
+            await asyncio.sleep_ms(demoInitPause)
+        return True
 
-    def _collectData(self, state):
+    async def _collectData(self):
         """
             REPLACE WITH YOUR SubClass METHOD!!
 
             _collectData - collects data from the sensor
-            There are lots of sensors that reuqire startup/scan times before they can return
-            a value, so we have to build in some logic for that
-            state: the current state of _collectData, which is returned along
-                    with the next pause interval time to the calling async routine
-                    Set it to zero when you're done
+                            Runs as a Task until complete from _taskToRun
         """
         self.values = {"None":None}
-        logger.debug(const("_collectData executing: State:%d : values: %s"), state, self.values)
-        return 0, 0
+        logger.debug(const("_collectData executing: State:%d : values: %s"), self.values)
+        await asyncio.sleep(0) # Cos we are doing nuffink
+        return True
 
     def getValues(self):
         return self.values
 
 class RandomSensor(Sensor):
 
-    def _collectData(self, state):
+    async def _collectData(self):
         import random
         r = random.randint(0,10)
         self.values = {"random":r}
         logger.debug(const("_collectData entered: %s"), self.values)
-        return 0, 0
+        return True
 
 class WaitSensor(Sensor):
-    
-    def __init__(self, interval=5, name=""):
-        super().__init__(interval=interval, name=name)
-        # Do special init tasks for this sensor
-        pass
 
-    def _init(self, state):
-        logger.debug(const("%s _init entered: State: %d: Time: %d"),self.__class__, state, time.time())
-        if state == 0:
-            # first time through
-            pause = 1
-            logger.debug(const("%s _init : State: %d: :Pause: %d"),self.__class__, state, pause)
-            state = 1
-            return pause, state
-        elif state == 1:
-            pause = 0
-            logger.debug(const("%s _init : %s"),self.__class__, self.values)
-            state = 0
-        return pause, state # All done
-        # Should probably handle the case of state != [0,1]!
-
-    def _collectData(self, state):
+    async def _collectData(self):
         import random, time
-        logger.debug(const("_collectData entered: State: %d: Time: %d"),state, time.time())
-        pause = 0.005
-        if state == 0:
-            # first time through
-            state = 1
-            logger.debug(const("_collectData waiting: State: %d: :Pause: %d"), state, pause)
-            return pause, state
-        elif state == 1:
-            r = random.randint(0,10)
-            self.values = {"wait":r}
-            logger.debug(const("_collectData collecting: %s"), self.values)
-            return 0, 0 # All done
-        # Should probably handle the case of state != [0,1]!
+        waitTime = random.randint(100,500)
+        logger.debug(const("_collectData entered: waitTime: %d msec"),waitTime)
+        await asyncio.sleep_ms(waitTime) # Cos we are doing nuffink
+        return True
+
+class WaitInitSensor(Sensor):
+    
+    async def _init(self):
+        pause = 100 #
+        times = 10
+        for state in range(times):
+            logger.debug('_init')
+            await asyncio.sleep_ms(pause)
+        return True
+
+    async def _collectData(self):
+        import random, time
+        waitTime = random.randint(100,500)
+        logger.debug(const("_collectData entered: waitTime: %d msec"),waitTime)
+        await asyncio.sleep_ms(waitTime) # Cos we are doing nuffink
+        return True
 
 class DisplayController(Sensor):
     dataFunctions = []
@@ -204,7 +170,7 @@ class DisplayController(Sensor):
         self.dataFunctions = dataFunctions
         #logger.debug(const("initialising"))
         
-    def _collectData(self, state):
+    def _collectData(self):
         values = {}
         for f in self.dataFunctions:
             values.update(f())
@@ -217,8 +183,8 @@ async def theMain():
     #fred = Sensor(name="1 BasicSensor",interval=10)
     #print("wilma: creating...")
     #wilma = RandomSensor(name="2 Random",interval=5)
-    print("wait: creating...")
-    wait = WaitSensor(name="4 Wait",interval=5)
+    logger.debug("creating Wait...")
+    wait = WaitInitSensor(name="4 Wait",interval=5)
     #print("betty: creating...")
     #dc = DisplayController(([fred.getValues, wilma.getValues, wait.getValues]), name="3 Betty",interval = 2)
     print()
