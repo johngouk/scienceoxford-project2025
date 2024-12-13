@@ -74,6 +74,15 @@ class WiFiConnection:
         self.st.active(st)
         
     @classmethod
+    def getMode(self):
+        if self.st != None and self.st.active():
+            return "STA"
+        elif self.ap != None and self.ap.active():
+            return "AP"
+        else:
+            return "NOCONN"
+        
+    @classmethod
     def setNetCreds(self, ssid, password):
         NetworkCredentials.setNetCreds(ssid, password)
         
@@ -93,8 +102,8 @@ class WiFiConnection:
         self.ap.config(essid=ssid, authmode=network.AUTH_WPA_WPA2_PSK, password=password)
         self.hostname = network.hostname()
         self.ap_ip = self.ap.ifconfig()[0]
-        self.ap_ssid = self.ap.config('ssid')
-        logger.info(const("WiFi AP: SSID: %s Pwd: '%s' IP: %s"), self.ap_ssid, password, self.ap_ip)
+        self.ssid = self.ap.config('ssid')
+        logger.info(const("WiFi AP: SSID: %s Pwd: '%s' IP: %s"), self.ssid, password, self.ap_ip)
         return True #, const("AP SSID:")+self.ap.config('ssid')+const( " IP:")+self.ap_ip
         
     @classmethod
@@ -145,7 +154,7 @@ class WiFiConnection:
             try:
                 ntptime.settime()
                 t = time.localtime() # 8-tuple of date/time values
-                logger.info(const("Time set: {0:4d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}").format(t[0],t[1],t[2],t[3],t[4],t[5], t[6], t[7]))
+                logger.info(const("Time set: %4d-%02d-%02d %02d:%02d:%02d"), t[0],t[1],t[2],t[3],t[4],t[5]) #, t[6], t[7])
             except Exception as e:
                 logger.error("Unable to set NTP time: %s", e)
             return True #, {'msg':self.statusText,'ssid':self.st.config('ssid'),'IP':self.st_ip,'hostname':self.hostname,'status':self.st.status()}
@@ -156,14 +165,13 @@ if __name__ == "__main__":
     logger.record = ESPLogRecord()
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
     print("****** Starting STA mode ******")
-    WiFiConnection.setNetCreds('norcot', 'nor265cot')
     #ok, info = WiFiConnection.start_station_mode() # Use default hostname
     ok = WiFiConnection.start_station_mode() # Use default hostname
     w = WiFiConnection()
-    print("Result:", ok, "Info:", w.ssid, w.st_ip, w.hostname)
+    print(f"Result: {ok} Info: {w.ssid} {w.st_ip} {w.hostname} {w.getMode()}")
     print("****** Starting AP mode ******")
     #ok, errorMsg = WiFiConnection.start_ap_mode()
     ok = WiFiConnection.start_ap_mode(password="thePassword")
     w = WiFiConnection()
-    print("Result:", ok, "Info:", w.ap_ssid, w.ap_ip, w.hostname)
+    print(f"Result: {ok} Info: {w.ssid} {w.ap_ip} {w.hostname} {w.getMode()}")
     print("Test getIp: %s" % WiFiConnection.getIp())

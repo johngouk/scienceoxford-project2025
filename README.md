@@ -27,9 +27,9 @@ The software is configured to use:
 
   	The LCD1602 backlight requires a 5V power supply. I used the 5V pin on the ESP to power the LCD backpack, and fortunately the ESP was 5V-tolerant on its pins (Wemos-style D1 MINI Pro from AliExpress). **Be cautious about applying 5V from the backpack to any of your ESP's pins!**
 	
-*	One or more DS18B20s, attached using the non-parasitic power mode to GPIO26, and a 4R7 resistor between VCC and the data pin, although it seems to work without it (!)
+*	One or more DS18B20s via pin 33, attached using the non-parasitic power mode to GPIO26, and a 4R7 resistor between VCC and the data pin, although it seems to work without it (!)
 
-*	Shortly, a paired ENS160, for CO2/VOC readings, and AHT21, for Temp/RH - the latter will be used to calibrate the ENS160, attached using I2C on pins 25/26
+*	A paired ENS160, for CO2/VOC readings, and AHT21, for Temp/RH - the latter will be used to calibrate the ENS160, attached using I2C on pins 25/26
 
 *	A pushbutton, connected to pin17, which just prints one of "Press event", "Double event" or "Long event" as appropriate on the Thonny REPL console
 
@@ -51,13 +51,13 @@ You'll have to consult your own ESP dev board instructions to work out which Dx 
 	 
 	 d. Adjust the Thonny View to show Files and Shell - this aids enormously with the next steps!
 	 
-	 e.	Direct the Files window to the downloaded folder in the This computer section of the Files window
+	 e.	Direct the Files window to the downloaded folder in the "This computer" section of the Files window
 	 
 	 f.	Switch focus to the `uploadToEsp/` folder, and upload the entire contents to the root of the ESP file system. The Thonny tool makes this very easy - select them, right click, upload to "/". You should see a list of files/folders appear in the MicroPython Device Files window - this is the root folder of the ESP32.
 	 
 	 I have found recently that this "all at once" approach sometimes fails, or at least, overpopulates the ESP file system root with copied files. In that case, delete everything from the ESP32, and copy each directory in turn, followed by any files not in the folders.
 	 
-	 g.	From the Thonny Micropython device file window, edit the `uploadToEsp/NetCreds.json` file to contain your network SSID/password. If you plan to make source changes, and you've cloned the repository, when you push back to GitHub, the whole world will know your credentials. This a Bad Thing, right? So **EDIT THE NETCREDS FILE ON THE ESP32!!**
+	 g.	From the Thonny Micropython device file window, edit the `NetCreds.json` file to contain your network SSID/password. If you plan to make source changes, and you've cloned the repository, when you push back to GitHub, the whole world will know your credentials. This a Bad Thing, right? So **EDIT THE NETCREDS FILE ON THE ESP32!!**
 	 	
 4.	From the download root folder in This computer, open the most recent `main_n.m.py` file and adjust the logging settings by modifying the line `logging.basicConfig(level=logging.INFO...`, below the line `ADJUST LOG LEVEL HERE` to use whatever level you want - DEBUG is good if you want to see what's happening.
 5.	With the `main_n.m.py` file open and in focus in the IDE, click on the green *Run* button on the toolbar; the main.py should be uploaded and run. 

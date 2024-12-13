@@ -62,12 +62,14 @@ from networking.WiFiConnection import WiFiConnection
     Following "wait_..." functions temporary placeholders for actual button actions
 """
 async def wait_press(e, lcd):
+    """ wait_press: puts up the wifi mode, ssid and hostname for 10 secs """
     while True:
         await e.wait()
         e.clear()
         #print("Press Event!")
-        lcd[0] = "Pressed"
-        await asyncio.sleep(5)
+        wifiInfo = f"Mode:{WiFiConnection.getMode()} SSID:{WiFiConnection.ssid} Hostname:{WiFiConnection.hostname}"
+        lcd.scroll(0,wifiInfo)
+        await asyncio.sleep(10)
         lcd[0] = WiFiConnection.getIp()
 
 async def wait_long(e, lcd):
@@ -203,7 +205,6 @@ async def main():
     ens = ENS160AHT21(interval = 30)
 
     # 5
-    # Yeah yeah, we'll get to the CO2 sensor in a bit when the asyncio init is fixed...
     ws = WebServer([ds.getValues,ens.getValues], actionHandler, "/webdocs") # default to port 80
     #ws = WebServer([ds.getValues], actionHandler, "/webdocs") # default to port 80
         
