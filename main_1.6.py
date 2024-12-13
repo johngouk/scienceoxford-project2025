@@ -65,20 +65,28 @@ async def wait_press(e, lcd):
     while True:
         await e.wait()
         e.clear()
-        print("Press Event!")
+        #print("Press Event!")
         lcd[0] = "Pressed"
+        await asyncio.sleep(5)
+        lcd[0] = WiFiConnection.getIp()
 
 async def wait_long(e, lcd):
     while True:
         await e.wait()
         e.clear()
-        print("Long Event!")
+        #print("Long Event!")
+        lcd[0] = "Long Event"
+        await asyncio.sleep(5)
+        lcd[0] = WiFiConnection.getIp()
 
 async def wait_double(e, lcd):
     while True:
         await e.wait()
         e.clear()
-        print("Double Event!")
+        #print("Double Event!")
+        lcd[0] = "Double Event"
+        await asyncio.sleep(5)
+        lcd[0] = WiFiConnection.getIp()
         
 """
     actionHandler() - likely to be moved to a separate Controller object, which will also process
