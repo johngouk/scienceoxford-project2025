@@ -58,19 +58,26 @@ from button.pushbutton import Pushbutton
 # Note that you can't use the module name "network" for your own stuff - Python has already used it! 
 from networking.WiFiConnection import WiFiConnection
 
+MOTD = "Hi, I'm your friendly environmental sensor!"
+
 """
     Following "wait_..." functions temporary placeholders for actual button actions
 """
 async def wait_press(e, lcd):
     """ wait_press: puts up the wifi mode, ssid and hostname for 10 secs """
+    state = 0
     while True:
         await e.wait()
         e.clear()
         #print("Press Event!")
-        wifiInfo = f"Mode:{WiFiConnection.getMode()} SSID:{WiFiConnection.ssid} Hostname:{WiFiConnection.hostname}"
-        lcd.scroll(0,wifiInfo)
-        await asyncio.sleep(10)
-        lcd[0] = WiFiConnection.getIp()
+        state = (state + 1) % 3
+        if state == 0:
+            lcd[0] = WiFiConnection.getIp()
+        elif state == 1:
+            wifiInfo = f"Mode:{WiFiConnection.getMode()} SSID:{WiFiConnection.ssid} Hostname:{WiFiConnection.hostname}"
+            lcd.scroll(0,wifiInfo)
+        elif state == 2:
+            lcd.scroll(0,MOTD)
 
 async def wait_long(e, lcd):
     while True:
