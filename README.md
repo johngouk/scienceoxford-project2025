@@ -8,9 +8,9 @@ The current proposal is:
 * a bunch of sensors, to be decided 
 	* this one is using 2x DS18B20s on a single pin
 	* the target one is a ENS160/AHT21 combo on a single dev board
-* an LCD, which shows various values etc. as most recenlyt coded e.g.
+* an LCD, which shows various values etc. as most recently coded e.g.
 	* IP address
-	* alternately GC mem_free, and sensor output
+	* Sensor output
 * a webserver, with all the html/js/css loaded on to the ESP32
 * one or more Buttons, which could include
 	* change the display
@@ -31,7 +31,13 @@ The software is configured to use:
 
 *	A paired ENS160, for CO2/VOC readings, and AHT21, for Temp/RH - the latter will be used to calibrate the ENS160, attached using I2C on pins 25/26
 
-*	A pushbutton, connected to pin17, which just prints one of "Press event", "Double event" or "Long event" as appropriate on the Thonny REPL console
+*	A pushbutton, connected to pin17: For demo purposes this does:
+
+	Single press: Display either IP address, Current WiFi connection details, or Message Of The Day
+	
+	Long press: Display "Long Event",then back to IP address
+	
+	Double press: Display "DoubleEvent", then back to IP address
 
 You'll have to consult your own ESP dev board instructions to work out which Dx pins are attached to which actual Espressif GPIOnn pins.
 ## Software Instructions ##

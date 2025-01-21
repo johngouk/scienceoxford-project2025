@@ -1,5 +1,12 @@
 import requests
 import json
+import logging
+
+logger = logging.getLogger(__name__)
+from ESPLogRecord import ESPLogRecord
+logger.record = ESPLogRecord()
+
+from networking.WiFiConnection import WiFiConnection
 
 locations = {'Oxford':330217,'Reading':330396}
 
@@ -16,5 +23,10 @@ def getForecast(name, location):
            ,f['Night']['IconPhrase'])
           )
 
-for k in locations.keys():
-    getForecast(k, locations[k])
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
+
+ok = WiFiConnection.start_station_mode()
+if ok:
+    for k in locations.keys():
+        getForecast(k, locations[k])

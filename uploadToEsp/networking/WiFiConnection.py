@@ -175,3 +175,4 @@ if __name__ == "__main__":
     w = WiFiConnection()
     print(f"Result: {ok} Info: {w.ssid} {w.ap_ip} {w.hostname} {w.getMode()}")
     print("Test getIp: %s" % WiFiConnection.getIp())
+    
