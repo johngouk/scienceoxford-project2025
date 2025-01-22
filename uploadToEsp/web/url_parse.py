@@ -1,5 +1,7 @@
 def url_parse(url): # Doesn't handle MBCS
-    url.replace('+',' ') # Fix these first in case of encoded values 
+    #print(f"url_parse url:{url}")
+    url = url.replace('+',' ') # Fix these first in case of encoded values 
+    #print(f"url_parse url:{url} '+' replaced")
     l = len(url)
     data = bytearray()
     i = 0
@@ -13,6 +15,5 @@ def url_parse(url): # Doesn't handle MBCS
             i += 3
         
         data.append(d)
-    
+    #print(f"url_parse data:{data}")
     return data.decode('utf8')
-

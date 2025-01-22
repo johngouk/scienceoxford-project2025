@@ -77,6 +77,7 @@ async def wait_press(e, lcd):
             wifiInfo = f"Mode:{WiFiConnection.getMode()} SSID:{WiFiConnection.ssid} Hostname:{WiFiConnection.hostname}"
             lcd.scroll(0,wifiInfo)
         elif state == 2:
+            logger.debug("wait_press: MOTD:%s", MOTD)
             lcd.scroll(0,MOTD)
 
 async def wait_long(e, lcd):
@@ -103,11 +104,15 @@ async def wait_double(e, lcd):
 """
 # Handler for web "action" page accesses
 def actionHandler(action, params):
-    actions = {"network":("hostname","ssid","password"), "message":('message')}
+    global MOTD # Don't like this but needs must...
+    actions = {"network":("hostname","ssid","password"), "message":("MOTD",)}
+    logger.debug(const("actionHandler: actions: %s"), actions)
+    logger.debug(const("actionHandler: action: %s:type:%s, params:%s"), action, type(action), params)
     # Check required params
     if action in actions: # Legal action
         for x in actions[action]: # Check for param 
             if x not in params:
+                logger.debug(const("actionHandler: param:%s not in params %s for action %s, "), x, params, action)
                 return "" # Leave!
         # Don't really like hardcoded values here...
         if action == "network":
@@ -122,15 +127,18 @@ def actionHandler(action, params):
                 logger.info(const("Network config updated: hostname: %s SSID: %s Pwd: %s"), hostname, ssid, "********")
         elif action == "message":
             # MOTD
-            MOTD = url_parse(params['message'])
-            logger.info(const("MOTD set: %s "), message )
+            logger.debug("actionHandler: MOTD type:%s, value:%s", type(params['MOTD']), params['MOTD'])
+            logger.debug("actionHandler: MOTD parsed:%s", url_parse(params['MOTD']))
+            MOTD = url_parse(params['MOTD'])
+            logger.info(const("actionHandler: MOTD set: %s "), MOTD )
     
-        return("index.html")
+        return("thanks.html")
     else: # Action not in actions!
-        logger.error(const("Action '%s' requested, not implemented"), action)
+        logger.error(const("actionHandler: Action '%s' requested, not implemented"), action)
         
     # Fall through to here
-    return "" # Not implemented
+    logger.error(const("actionHandler: action: %s not implemented - returning default page"), action)
+    return "index.html" # Not implemented
         
 
 """
