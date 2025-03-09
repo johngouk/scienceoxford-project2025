@@ -185,7 +185,7 @@ async def main():
     await asyncio.sleep(1)
 
     # 2
-    pb = Pushbutton(Pin(17, Pin.IN, Pin.PULL_DOWN))
+    pb = Pushbutton(Pin(21, Pin.IN, Pin.PULL_UP))
     pb.press_func(None) # Event tracking
     pb.double_func(None)
     pb.long_func(None)
@@ -216,11 +216,12 @@ async def main():
     await asyncio.sleep(5) # Let people read the IP/Hostname
 
     # 4
-    ds = DS18B20(interval=10, pin=33) # Update sensor values every 10 seconds
+    #ds = DS18B20(interval=10, pin=33) # Update sensor values every 10 seconds
     ens = ENS160AHT21(interval = 30)
 
     # 5
-    ws = WebServer([ds.getValues,ens.getValues], actionHandler, "/webdocs") # default to port 80
+    ws = WebServer([ens.getValues,], actionHandler, "/webdocs") # default to port 80
+    #ws = WebServer([ds.getValues,ens.getValues], actionHandler, "/webdocs") # default to port 80
     #ws = WebServer([ds.getValues], actionHandler, "/webdocs") # default to port 80
         
     # 6
@@ -230,9 +231,9 @@ async def main():
     while True:
         gc.collect()
         printMem("L", "LedLoop")
-        values = ds.getValues()
+        values = ens.getValues()
         for k in values.keys():
-            lcd[1] = "%s:%.1f"%(str(k), values[k])
+            lcd[1] = "%s:%s"%(str(k), values[k])
             await asyncio.sleep(1)
         await asyncio.sleep(1)
 
