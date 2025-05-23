@@ -1,0 +1,2 @@
+def simpleFunction():
+    return 'hurray'
