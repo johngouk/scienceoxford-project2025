@@ -46,18 +46,18 @@ class ENS160AHT21(Sensor):
         logger.debug(const("_collectData from ENS160ATH21"))
         temp_aht21 = self.sensor_aht21.temperature
         rh_aht21 = self.sensor_aht21.relative_humidity
-        self.values['AHT_Temp'] = temp_aht21
-        self.values['AHT_RH'] = rh_aht21
+        self.values['Temp'] = round(temp_aht21, 1)
+        self.values['RH'] = round(rh_aht21, 1)
         self.sensor_ens160.set_envdata(temp_aht21,rh_aht21)
         validity, aqi, tvoc, eco2, temp, rh, eco2_rating, tvoc_rating = self.sensor_ens160.read_air_quality()
         self.values['Validity'] = validity
         self.values['AQI'] = aqi
-        self.values['TVOC'] = tvoc
-        self.values['ECO2'] = eco2
+        self.values['VOC'] = tvoc
         self.values['ENS_Temp'] = temp
         self.values['ENS_RH'] = rh
-        self.values['ECO2_Rating'] = eco2_rating
-        self.values['TVOC_Rating'] = tvoc_rating
+        self.values['CO2'] = eco2
+        self.values['CO2_Rating'] = eco2_rating
+        self.values['VOC_Rating'] = tvoc_rating
         # Read temperature and humidity from AHT21
         logger.debug(const("Values: %s"), self.values)
         return True # All done

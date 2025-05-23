@@ -121,8 +121,8 @@ async def main():
             voc = values.get('TVOC')
             
             # TO-DO: write code to display values on the LCD
-            lcd[0] = str()
-            lcd[1] = str()
+            lcd[0] = "Temperature: " + str(round(temp)) + "C"
+            lcd[1] = "Humidity:    " + str(round(humidity)) + "%"
         
         await asyncio.sleep(1)
 

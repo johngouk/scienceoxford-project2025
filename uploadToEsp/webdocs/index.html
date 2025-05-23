@@ -1,88 +1,69 @@
 <!DOCTYPE html>
 <html>
-    <head> <title>ESP32 Sensor Data</title> 
-	    <!-- ><link rel="stylesheet" href="basic.css" type="text/css"> -->
-		<style>
-			table, td, th {
-			  border: 1px solid black;
-			}
 
-			table {
-			  border-collapse: collapse;
-			  /* width: 100%; */
-			}
+<head>
+    <title>ESP32 Air Quality Monitor</title>
+    <link rel="stylesheet" type="text/css" href="example.css">
+    <script type="text/javascript" src="script.js"></script>
+</head>
 
-			td:last-child {
-			  text-align: right;
-			}	
-		</style>
-		<script>
-			
-			var firstTime = true;
-			function setDataValue(value)
-			{
-				// text: [{"item1": 123}, {"item2": 234}, {"item3": 3245}]
-				newData = JSON.parse(value);
-				var mytab = document.getElementById("data");
-				var row, title, val;
-				for (let i=0; i<newData.length; i++)
-				{
-					if (firstTime) 
-					{
-						row = mytab.insertRow();
-						title = row.insertCell(0);
-						val = row.insertCell(1);
-						title.innerHTML = Object.keys(newData[i])[0];
-						val.innerHTML = Object.values(newData[i])[0];
-					}  else 
-					{ // Look through the table rows to find the one with the same title
-						for (let row of mytab.rows) 
-						{
-							if (row.cells[0].innerHTML === Object.keys(newData[i])[0]) 
-							{
-								row.cells[1].innerHTML = Object.values(newData[i])[0];
-							}
-						}
-					}
-				}
-				firstTime = false;
-			}
+<body onload="docLoaded()">
+    <h1>This is a heading!</h1>
+    
+    <h3>Table of data</h3>
+    <table id="data">
+        <tr>
+            <th>Item</th>
+            <th>Value</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td>Validity</td>
+            <td>None</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Temp</td>
+            <td>None</td>
+            <td><sup>o</sup>C</td>
+        </tr>
+        <tr>
+            <td>RH</td>
+            <td>None</td>
+            <td>%</td>
+        </tr>
+        <tr>
+            <td>CO2</td>
+            <td>None</td>
+            <td>ppm</td>
+        </tr>
+        <tr>
+            <td>CO2_Rating</td>
+            <td>None</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>VOC</td>
+            <td>None</td>
+            <td>ppb</td>
+        </tr>
+        <tr>
+            <td>VOC_Rating</td>
+            <td>None</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>AQI</td>
+            <td>None</td>
+            <td></td>
+        </tr>    
+    </table>
+    
+    <p>Next, a picture...</p>
+    
+    <img src=".\temperature.png" width="200px" height="auto"><br>
 
-			async function getText(file) {
-			  let myObject = await fetch(file);
-			  let myText = await myObject.text();
-			  return myText;
-			}
-		
-			gatherDataAjaxRunning = false;
-			function gatherData(){
-			    // stop overlapping requests
-			    if(gatherDataAjaxRunning) return;
-				//document.getElementById("demo").innerHTML = "gatherData";
-			    gatherDataAjaxRunning = true;
-				
-				getText("/data").then(
-					function(value){setDataValue(value);}
-				)
-				
-			    gatherDataAjaxRunning = false;
-			}
-		
-			var dataTimer;
-			function docLoaded() {
-			    //set_rgb_colour(); // initialise rgb display
-				//document.getElementById("demo").innerHTML = "Doc ready";
-			    dataTimer = setInterval(window.gatherData,1000); // call data every 0.5 seconds
-			}
-		</script>
-		
-	</head>
-    <body onload="docLoaded()"> <h1>ESP32 Sensor Data</h1>
-		<!-- <p id="demo">Dynamic text</p> -->
-        <table id="data" border="1"> <tr><th>Item</th><th>Value</th></tr></table>
-	
-	<br>
-	<hr>
-	<a href="config.html">Click here to change the network configuration and Message of the Day</a>
-    </body>
+    <a href="config.html">Click here to change the network configuration and Message of the Day</a>
+</body>
+
 </html>
