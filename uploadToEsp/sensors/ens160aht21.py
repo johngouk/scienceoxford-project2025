@@ -14,10 +14,10 @@ from sensors.ahtx0 import AHT20  # Assuming AHT20 is compatible with AHT21 and s
 
 class ENS160AHT21(Sensor):
 
-    def __init__( self, i2c=1, sclPin=25, sdaPin=26,freq=100000, interval = 30, name = "ENS160AHT21"):
+    def __init__( self, i2c=1, sclPin=25, sdaPin=26,freq=100000, interval = 30, name = "ENS160AHT21", temp_offset = 0):
         #print(type(i2c),type(sclPin),type(sdaPin),type(freq))
         logger.info(const("initialising ENS160AHT21: I2CUnit: %d SCL: %d SDA: %d freq: %d"), i2c, sclPin, sdaPin, freq)
-        self.temperature_offset = -10.0  # Adjust this value as needed - no idea why we might!
+        self.temp_offset = temp_offset  # Adjust this value as needed - no idea why we might!
         self.sdaPin = sdaPin
         self.sclPin = sclPin
         self.scl = Pin(self.sclPin, Pin.PULL_UP)
@@ -44,17 +44,17 @@ class ENS160AHT21(Sensor):
     # SubClass data collection function implementation
     async def _collectData(self):
         logger.debug(const("_collectData from ENS160ATH21"))
-        temp_aht21 = self.sensor_aht21.temperature
+        temp_aht21 = self.sensor_aht21.temperature + self.temp_offset
         rh_aht21 = self.sensor_aht21.relative_humidity
-        self.values['Temp'] = round(temp_aht21, 1)
-        self.values['RH'] = round(rh_aht21, 1)
+        self.values['AHT_Temp'] = temp_aht21
+        self.values['AHT_RH'] = rh_aht21
         self.sensor_ens160.set_envdata(temp_aht21,rh_aht21)
         validity, aqi, tvoc, eco2, temp, rh, eco2_rating, tvoc_rating = self.sensor_ens160.read_air_quality()
         self.values['Validity'] = validity
         self.values['AQI'] = aqi
         self.values['VOC'] = tvoc
-        self.values['ENS_Temp'] = temp
-        self.values['ENS_RH'] = rh
+        self.values['Temp'] = round(temp, 1) # move rounding to Javascript at some point
+        self.values['RH'] = round(rh, 1)     # move rounding to Javascript at some point
         self.values['CO2'] = eco2
         self.values['CO2_Rating'] = eco2_rating
         self.values['VOC_Rating'] = tvoc_rating
