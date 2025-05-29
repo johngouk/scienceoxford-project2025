@@ -145,7 +145,7 @@ async def main():
     await asyncio.sleep(1)
     
     # 4 - set up the sensor
-    ens = ENS160AHT21(interval = 30, temp_offset = -5)
+    ens = ENS160AHT21(interval = 30, temp_offset = 0)
     await asyncio.sleep(1)
     
     # 5 - no webserver code for Session 1
