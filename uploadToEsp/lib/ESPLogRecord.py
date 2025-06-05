@@ -14,16 +14,12 @@ class ESPLogRecord(LogRecord):
         super().set(name, level, message)
         # Modified to account for not having a network connection!
         self.ct = time.time()
-        strCt = str(self.ct)
+
         ct_ns = time.time_ns()
         strNs = str(ct_ns)
         # time_ns is  ssssmmmuuu000 with microSec resolution in fact
         #             0123456789ABCD
         #                 ^^^         want these 3 for ms
-        #print(strCt, strNs)
-        msOffset = len(strNs)-9
-        self.msecs = int(strNs[msOffset:msOffset+3])
-        #print(strNs, self.msecs) 
 
 if __name__ == "__main__":
     import logging
