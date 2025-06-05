@@ -19,10 +19,10 @@ class ESPLogRecord(LogRecord):
         # time_ns is  ssssmmmuuu000 with microSec resolution in fact
         #             0123456789ABCD
         #                 ^^^         want these 3 for ms
-        print(strNs)
+        #print(strNs)
         msOffset = len(strNs)-9
         self.msecs = int(strNs[msOffset:msOffset+3])
-        print(strNs, self.msecs)
+        #print(strNs, self.msecs)
         
 if __name__ == "__main__":
     import logging
