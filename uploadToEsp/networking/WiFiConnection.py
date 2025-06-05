@@ -24,14 +24,17 @@ statusCodes = {
     network.STAT_IDLE:const("IDLE"),
     network.STAT_CONNECTING:const("CONNECTING"),
     network.STAT_GOT_IP:const("GOT_IP"),
-    network.STAT_IDLE:const("IDLE"),
-    network.STAT_NO_AP_FOUND:const("NO_AP_FOUND - check SSID"),
+    network.STAT_NO_AP_FOUND:const("NO_AP_FOUND - check SSID or AP Password requirement"),
     network.STAT_WRONG_PASSWORD:const("WRONG_PASSWORD"),
     }
 if ESP32:
     statusCodes.update ({network.STAT_ASSOC_FAIL:const("ASSOC_FAIL"),
                         network.STAT_BEACON_TIMEOUT:const("BEACON_TIMEOUT"),
-                        network.STAT_HANDSHAKE_TIMEOUT:const("HANDSHAKE_TIMEOUT")
+                        network.STAT_HANDSHAKE_TIMEOUT:const("HANDSHAKE_TIMEOUT"),
+                        network.STAT_NO_AP_FOUND_IN_RSSI_THRESHOLD:'AP_OUT_OF_RANGE',
+                        network.STAT_NO_AP_FOUND_IN_AUTHMODE_THRESHOLD:'AP_OUT_OF_RANGE',
+                        network.STAT_NO_AP_FOUND_W_COMPATIBLE_SECURITY:'NO_AP_FOUND_W_COMPATIBLE_SECURITY',
+                        15:const("ENCRYPTED_AP_WRONG_PASSWORD")
                         })
   
 class WiFiConnection:
@@ -123,6 +126,8 @@ class WiFiConnection:
         if not (self.st.isconnected()):
             logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), creds[0], '********')
             self.st.connect(creds[0], creds[1])
+            # Added to reduce Bad Password attempts etc.
+            self.st.config(reconnects=0)
             max_wait = 10
             # wait for connection - poll every 0.5 secs
             while max_wait > 0:
@@ -138,7 +143,7 @@ class WiFiConnection:
         if status in statusCodes:
             self.statusText = statusCodes[status]
         if not self.st.isconnected():                    
-            logger.error(const("WiFi can't connect: Status %d: Reason: %s"), status, self.statusText)
+            logger.error(const("WiFi can't connect: SSID: %s Status %d: Reason: %s"), creds[0], status, self.statusText)
             return False
         else:
             # connection successful
