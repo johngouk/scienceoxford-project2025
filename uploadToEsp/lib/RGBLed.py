@@ -29,17 +29,16 @@ except ImportError:
             print(f"\tPin init - {pin}")
     # dummy PWM class
     class PWM:
-        _pin = None
-        _freq = 0
-        _dc = 0
-        def __init__(self, pin):
+        def __init__(self, pin,freq=2000,duty_u16=0):
             print(f"\tPWM init - {pin}")
             self._pin = pin
+            self._freq = freq
+            self._dc = duty_u16
         def freq(self, f):
-            print(f"\tPWM freq - {f}")
+            print(f"\tPWM {self._pin._pin} freq - {f}")
             self._freq = f
         def duty_u16(self, dc):
-            print(f"\tPWM dt - {dc}")
+            print(f"\tPWM {self._pin._pin} dc - {dc}")
             self._dc = dc
 
 import time
@@ -49,21 +48,20 @@ import time
 class RGBLed:
     
     _debug = False
-    _pwms = []
-    _last = [0, 0, 0] # Stores native u16 duty cycle value
-    _on = False
-    _freq = 2000
-    
-    
+        
     def _print(self, s):
         if self._debug:
             print(s)
             
     def __init__(self, RPin, GPin, BPin): # Constructor
         self._print(f'init: pins {RPin}, {GPin}, {BPin}')
+        self._last = [0, 0, 0] # Stores native u16 duty cycle value
+        self._on = False
+        self._freq = 2000
+
         # Critical to initialise PWM objects with required frew and 0% duty cycle!!
-        self._pwms = [PWM(Pin(RPin),freq=self._freq,duty_u16=0), \
-                      PWM(Pin(GPin),freq=self._freq,duty_u16=0), \
+        self._pwms = [PWM(Pin(RPin),freq=self._freq,duty_u16=0),
+                      PWM(Pin(GPin),freq=self._freq,duty_u16=0),
                       PWM(Pin(BPin),freq=self._freq,duty_u16=0)]
         
     # Turns LEDs off
@@ -81,7 +79,7 @@ class RGBLed:
         self._on = True
 
     # Toggle: does the other thing, returns previous on/off state
-    def toggle():
+    def toggle(self):
         if self._on:
             self.off()
         else:
@@ -97,7 +95,7 @@ class RGBLed:
             # print('LED was on, re-displaying')
             self.on()
     
-    # Takes "native" DC values 0-65536 for finest coour graduation
+    # Takes "native" DC values 0-65536 for finest colour graduation
     def setRawColour(self, raw): #x raw = [n, n, n] 0 <= n < 65536
         for i in range(0,3):
             self._last[i] = max(0,min(raw[i],65535))
@@ -123,11 +121,10 @@ if __name__ == "__main__":
     chocolate = [210,105,30]
                  
     #            ['red',red],
-    clist = [\
-            ['red',red],['green',green],['blue',blue],\
-            ['coral',coral],['orange',orange],['darkgreen',darkgreen],['cyan',cyan],['aquamarine',aquamarine],\
-            ['dodgerblue',dodgerblue], ['fuchsia',fuchsia],['deeppink',deeppink],['lightgray',lightgray],\
-            ['chocolate',chocolate] \
+    clist = [['red',red],['green',green],['blue',blue],
+            ['coral',coral],['orange',orange],['darkgreen',darkgreen],['cyan',cyan],['aquamarine',aquamarine],
+            ['dodgerblue',dodgerblue], ['fuchsia',fuchsia],['deeppink',deeppink],['lightgray',lightgray],
+            ['chocolate',chocolate] 
             ]
     
     Red_pin = 14
@@ -135,9 +132,9 @@ if __name__ == "__main__":
     Blue_pin = 4
     
     led = RGBLed(Red_pin,Green_pin,Blue_pin)
-    '''
+    
     for c in clist:
-        print(c)
+        #print(c)
         led.setRGBColour(c[1])
         print(f"{c[0]} *** on ***")
         led.on()
@@ -145,17 +142,22 @@ if __name__ == "__main__":
         print(f"{c[0]} *** off ***")
         led.off()
         time.sleep(1)
-    
+        led.toggle()
+        time.sleep(1)
+        led.toggle()
+        time.sleep(1)
+        
+    '''
     for c in clist:
         print(f"{c[0]} *** on ***")
         led.setRGBColour(c[1])
         led.on()
         time.sleep(1)
-    '''
+    
     led.on()
     for r in range(0,256,10):
         for g in range(256,0,-10):
             for b in range(256,0,-10):
                 led.setRGBColour([r,g,b])
                 time.sleep(0.1)
-                
+    '''  
