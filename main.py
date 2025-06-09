@@ -212,12 +212,18 @@ async def main():
     # main task control loop
     # Display memory if in debug
     # Show some values on the LCD for now
-    rgb.setRGBColour(blue) # Set the RGB LED colour, using pre-defined values
+    rgb.setRGBColour(green) # Set the RGB LED colour, using pre-defined values
     while True:
         gc.collect()
         printMem("L", "LedLoop")
-        rgb.toggle() # Flip the RGB LED on and off
-        values = getValues()
+        values = ens.getValues()
+        if 'CO2' in values:
+            if values['CO2'] > 600:
+                rgb.setRGBColour(red)
+                rgb.on()
+            else:
+                rgb.setRGBColour(green)
+            rgb.on() # Only turn RB on if there is a CO2 reading at all
         #values = {1:1, 2:2, 3:3, 4:4}
         for k in values.keys():
             lcd[1] = "%s:%.1f"%(str(k), values[k])
