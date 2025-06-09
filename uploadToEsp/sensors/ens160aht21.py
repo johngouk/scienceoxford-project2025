@@ -53,6 +53,7 @@ class ENS160AHT21(Sensor):
         self.values['Validity'] = validity
         self.values['AQI'] = aqi
         self.values['TVOC'] = tvoc
+        self.values['CO2'] = eco2
         self.values['ENS_Temp'] = temp
         self.values['ENS_RH'] = rh
         self.values['ECO2_Rating'] = eco2_rating
