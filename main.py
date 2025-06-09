@@ -217,10 +217,9 @@ async def main():
         gc.collect()
         printMem("L", "LedLoop")
         values = ens.getValues()
-        if 'CO2' in values:
-            if values['CO2'] > 600:
-                rgb.setRGBColour(red)
-                rgb.on()
+        if 'CO2' in values: # Check for presence of variable
+            if values['CO2'] > 600: # Check for level
+                rgb.setRGBColour(red) # Oops, stop breathing guys!
             else:
                 rgb.setRGBColour(green)
             rgb.on() # Only turn RB on if there is a CO2 reading at all
