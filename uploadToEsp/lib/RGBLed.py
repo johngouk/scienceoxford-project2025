@@ -142,8 +142,10 @@ if __name__ == "__main__":
         print(f"{c[0]} *** off ***")
         led.off()
         time.sleep(1)
+        print(f"{c[0]} *** toggle on ***")
         led.toggle()
         time.sleep(1)
+        print(f"{c[0]} *** toggle off ***")
         led.toggle()
         time.sleep(1)
         
