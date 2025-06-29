@@ -177,9 +177,12 @@ async def main():
     asyncio.create_task(wait_long(pb.long, lcd))
 
     # 3
+    #hostname = 'AQM'.lower()
+    hostname = 'coolname'
+    #hostname = ''
     ssid = 'JohnG'
     password = 'testpass'
-    ok = WiFiConnection.start_station_mode()
+    ok = WiFiConnection.start_station_mode(hostname=hostname) # Use credentials from NetCreds.json
     mode = "?"
     if ok:
         # Set up as STA
@@ -187,8 +190,8 @@ async def main():
         mode = "S"
     else:
         logger.warning("WiFi STA mode failed, cause %s : trying AP mode", WiFiConnection.statusText)
-        password = 'password'
-        if WiFiConnection.start_ap_mode(ssid="", password=password):
+        #password = 'password'
+        if WiFiConnection.start_ap_mode(ssid=ssid, password=password):
             logger.warning("WiFi AP mode started as network SSID %s Pwd: %s Server IP: %s", WiFiConnection.ssid, password, WiFiConnection.ap_ip)
             mode = "A"
         else:
@@ -210,6 +213,7 @@ async def main():
         
     # 6
     # main task control loop
+    logger.info('Initialisation complete - Entering main loop')
     # Display memory if in debug
     # Show some values on the LCD for now
     rgb.setRGBColour(green) # Set the RGB LED colour, using pre-defined values
@@ -225,7 +229,9 @@ async def main():
             rgb.on() # Only turn RB on if there is a CO2 reading at all
         #values = {1:1, 2:2, 3:3, 4:4}
         for k in values.keys():
-            lcd[1] = "%s:%.1f"%(str(k), values[k])
+            # print(k, values[k])
+            # lcd[1] = "%s:%.1f"%(str(k), values[k])
+            lcd[1] = "%s:%s"%(str(k), str(values[k]))
             await asyncio.sleep(1)
         await asyncio.sleep(1)
 

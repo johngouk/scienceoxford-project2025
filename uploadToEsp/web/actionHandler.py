@@ -36,10 +36,15 @@ def actionHandler(action, params):
             hostname = url_parse(params['hostname'])
             ssid = url_parse(params['ssid'])
             password = url_parse(params['password'])
-            # not sure what to do with the hostname for now! Would have to put in NetCreds...
-            if ssid != "" and password != "":
+            # Do we want to modify
+            # a) hostname
+            if (hostname != ""):
+                WiFiConnection.setHostname(hostname)
+                logger.info(const("Network config updated: hostname: %s"), hostname)
+            #  b) ssid/pwd?
+            if (ssid != "" and password != ""):
                 WiFiConnection.setNetCreds(ssid, password)
-                logger.info(const("Network config updated: hostname: %s SSID: %s Pwd: %s"), hostname, ssid, "********")
+                logger.info(const("Network config updated: SSID: %s Pwd: %s"), ssid, "********")
         elif action == "message":
             # MOTD
             logger.debug("actionHandler: MOTD type:%s, value:%s", type(params['MOTD']), params['MOTD'])
