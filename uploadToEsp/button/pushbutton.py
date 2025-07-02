@@ -1,5 +1,42 @@
 """
     Simple implementation of the GoF Design Pattern State
+    https://en.wikipedia.org/wiki/State_pattern
+    to implement a pushbutton
+    
+    This uses some of the base code i.e. some __init__, _go, _check, the API
+    https://github.com/peterhinch/micropython-async/blob/master/v3/primitives/pushbutton.py
+    
+    The original code was pretty hard to follow, so I rewrote the logic as a FSM.
+    
+    This is a Finite State Machine implementation. It has
+    - a (finite!) number of states to be in
+    - a number of events which it detects
+    - a set of transitions from one state to another, depending on the detected event
+    
+    The states are represented as individual classes, which implement the state-specific logic
+    
+    States are:
+    WP - Wait for Press
+    WR - Wait for Release
+    WDP - Wait for Double Press
+    WDLR - Wait for Double/Long/Release
+    
+    Events (so few! It's only a button...):
+    EV_F2T - button press detected (switch went from open to closed)
+    EV_T2F - button release detected (switch went from closed to open)
+    EV_DT - timer expired for double press detection i.e. no second press within time limit
+    EV_LT - timer expired for long press i.e. no release detected in time limit, so button was held down
+    
+    Event/state transitions:
+    WP -EV_F2T-> WR (open->close detected, start waiting for the release or the long press timeout)
+    WR -EV_T2F-> WDP (release detected, start waiting for the double press timer)
+    WR -EV_LT-> WDLR (long press detected, waiting for a release)
+    WDP -EV_DT-> WP (no double press so it was a press, go back to wait for a press again)
+    WDP -EV_F2T-> WDLR (second press in time limit, so double press, wait for release)
+    WDLR -EV_T2F-> WP (release detected, go back to wait for a press)
+    
+    The code for the classes also does things like start/stop timers etc. Read it.
+    
 """
 
 import asyncio
@@ -125,6 +162,7 @@ class Pushbutton:
     def deinit(self):
         self._run.cancel()
 
+    # State classes
     class WP():
         def handleEvent(self, event):
             if event == self.EV_F2T:
