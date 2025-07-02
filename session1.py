@@ -28,7 +28,7 @@ from button.pushbutton import Pushbutton
 
 print("Debugging: all libraries imported")
 
-data = False
+data = True
 MOTD = "Message of the Day!"
 
 async def wait_press(e, lcd):
@@ -80,9 +80,9 @@ async def main():
     
     # 1 - Initialise and start the LCD
     lcd = LCD()
-    lcd[0] = ("Welcome to")
-    lcd[1] = ("Science Oxford")
-    await asyncio.sleep(1)
+    lcd[0] = "Welcome to"
+    lcd[1] = "Science Oxford"
+    await asyncio.sleep(5)
     
     # 2 - Set up the button
     pb = Pushbutton(Pin(21, Pin.IN, Pin.PULL_UP))
@@ -114,15 +114,15 @@ async def main():
         if data == True:
             # get all sensor data
             values = ens.getValues()
-            print("Debugging: all sensor data - ", ens.getValues())
-            
-            # we have picked three values to get you started
-            co2 = values.get('ECO2')
+            print("Debugging: all sensor data - ", ens.getValues(), "\n")
             temp = values.get('AHT_Temp')
             humidity = values.get('AHT_RH')
+            co2 = values.get('ECO2')
+            voc = values.get('TVOC')
             
             # TO-DO: write code to display values on the LCD
-            
+            lcd[0] = "Temperature: " + str(round(temp)) + "C"
+            lcd[1] = "Humidity:    " + str(round(humidity)) + "%"
         
         await asyncio.sleep(1)
 

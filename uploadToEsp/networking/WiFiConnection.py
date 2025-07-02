@@ -24,14 +24,17 @@ statusCodes = {
     network.STAT_IDLE:const("IDLE"),
     network.STAT_CONNECTING:const("CONNECTING"),
     network.STAT_GOT_IP:const("GOT_IP"),
-    network.STAT_IDLE:const("IDLE"),
-    network.STAT_NO_AP_FOUND:const("NO_AP_FOUND - check SSID"),
+    network.STAT_NO_AP_FOUND:const("NO_AP_FOUND - check SSID or AP Password requirement"),
     network.STAT_WRONG_PASSWORD:const("WRONG_PASSWORD"),
     }
 if ESP32:
     statusCodes.update ({network.STAT_ASSOC_FAIL:const("ASSOC_FAIL"),
                         network.STAT_BEACON_TIMEOUT:const("BEACON_TIMEOUT"),
-                        network.STAT_HANDSHAKE_TIMEOUT:const("HANDSHAKE_TIMEOUT")
+                        network.STAT_HANDSHAKE_TIMEOUT:const("HANDSHAKE_TIMEOUT"),
+                        network.STAT_NO_AP_FOUND_IN_RSSI_THRESHOLD:'AP_OUT_OF_RANGE',
+                        network.STAT_NO_AP_FOUND_IN_AUTHMODE_THRESHOLD:'AP_OUT_OF_RANGE',
+                        network.STAT_NO_AP_FOUND_W_COMPATIBLE_SECURITY:'NO_AP_FOUND_W_COMPATIBLE_SECURITY',
+                        15:const("ENCRYPTED_AP_WRONG_PASSWORD")
                         })
   
 class WiFiConnection:
@@ -95,34 +98,60 @@ class WiFiConnection:
         if hostname != "":
             self.hostname = hostname
             network.hostname(self.hostname)
+            NetworkCredentials.setHostname(hostname)
+            
+    @classmethod
+    def getHostname (self):
+        return self.hostname    
 
     @classmethod
     def start_ap_mode(self, hostname="", ssid="", password=""):
+        creds = NetworkCredentials.getNetCreds() # THere are always values for NetCreds!
+        if hostname == '':
+            hostname = creds['hostname']
+        if password == '':
+            password = creds['password']
+        if ssid == '':
+            ssid = creds['ssid']
+        # Maybe we should write out the creds at this point... but we're not
         self._startInterfaces(self, st=False, hostname=hostname)
         self.ap.config(essid=ssid, authmode=network.AUTH_WPA_WPA2_PSK, password=password)
-        self.hostname = network.hostname()
+        self.hostname = network.hostname() # Get the actual value
         self.ap_ip = self.ap.ifconfig()[0]
         self.ssid = self.ap.config('ssid')
         logger.info(const("WiFi AP: SSID: %s Pwd: '%s' IP: %s"), self.ssid, password, self.ap_ip)
         return True #, const("AP SSID:")+self.ap.config('ssid')+const( " IP:")+self.ap_ip
         
+        
     @classmethod
-    def start_station_mode(self, hostname=""):
+    def start_station_mode(self, hostname=''):
+        creds = NetworkCredentials.getNetCreds() # THere are always values for NetCreds!
+        if hostname == '': # No hostname supplied by caller...
+            hostname = creds['hostname'] # Default value is '' in NetCreds
+        else:
+            NetworkCredentials.setHostname(hostname) # Set the hostname to this
+            creds['hostname'] = hostname
+        logger.debug(const('Trying STA mode: SSID: %s Pwd: %s Hostname: %s'), creds['ssid'], creds['password'], hostname)
         # Sets self.st, so we're safe to use it later
         self._startInterfaces(self, ap=False, hostname=hostname)
         # connect to wifi network
         # If we're already connected but not to the right one, disconnect first
-        creds = NetworkCredentials.getNetCreds()
         if self.st.isconnected():
+            logger.info(const("WiFi STA: SSID: %s already connected"), self.ssid)
             currentSsid = self.st.config('ssid')
-            if currentSsid != creds[0]:
+            currentHostname = network.hostname()
+            if currentSsid != creds['ssid'] or (hostname != '' and currentHostname != hostname):
+                logger.info(const("WiFi STA: Connected SSID '%s' <> requested SSID '%s' - disconnected"), self.ssid, creds['ssid'])
                 self.st.disconnect()
                 while self.st.isconnected():
                     time.sleep(0.1)
+
         # Start again...
         if not (self.st.isconnected()):
-            logger.debug(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), creds[0], '********')
-            self.st.connect(creds[0], creds[1])
+            logger.info(const("WiFi connecting: Credentials: SSID: %s Pwd: %s"), creds['ssid'], creds['password'])
+            self.st.connect(creds['ssid'], creds['password'])
+            # Added to reduce Bad Password attempts etc.
+            self.st.config(reconnects=0)
             max_wait = 10
             # wait for connection - poll every 0.5 secs
             while max_wait > 0:
@@ -138,7 +167,7 @@ class WiFiConnection:
         if status in statusCodes:
             self.statusText = statusCodes[status]
         if not self.st.isconnected():                    
-            logger.error(const("WiFi can't connect: Status %d: Reason: %s"), status, self.statusText)
+            logger.error(const("WiFi can't connect: SSID: %s Status %d: Reason: %s"), creds['ssid'], status, self.statusText)
             return False
         else:
             # connection successful
@@ -166,12 +195,20 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)06d %(levelname)s - %(name)s - %(message)s')
     print("****** Starting STA mode ******")
     #ok, info = WiFiConnection.start_station_mode() # Use default hostname
+    logger.info(const("Default STA config - check"))
     ok = WiFiConnection.start_station_mode() # Use default hostname
     w = WiFiConnection()
-    print(f"Result: {ok} Info: {w.ssid} {w.st_ip} {w.hostname} {w.getMode()}")
+    print(f"Result: {ok} Info: {w.ssid} {w.st_ip} {w.hostname} Mode:{w.getMode()}")
+    hostname = "testHost"
+    ssid = "hurray"
+    pwd = "averylongpassword"
+    logger.info(const("Supply STA config in call - won't work %s %s"), ssid, pwd)
+    w = WiFiConnection()
+    print(f"Result: {ok} Info: {w.ssid} {w.st_ip} {w.hostname} Mode:{w.getMode()}")
     print("****** Starting AP mode ******")
     #ok, errorMsg = WiFiConnection.start_ap_mode()
-    ok = WiFiConnection.start_ap_mode(password="thePassword")
+    logger.info(const("Start AP mode - %s %s %s"), hostname, ssid, pwd)
+    ok = WiFiConnection.start_ap_mode(hostname = hostname, ssid = ssid, password=pwd)
     w = WiFiConnection()
     print(f"Result: {ok} Info: {w.ssid} {w.ap_ip} {w.hostname} {w.getMode()}")
     print("Test getIp: %s" % WiFiConnection.getIp())

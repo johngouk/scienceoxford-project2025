@@ -149,7 +149,7 @@ def getValues():
 # Code to test as free-standing program
 async def main():
     from flashLed import flashLed
-    from WiFiConnection import WiFiConnection
+    from networking.WiFiConnection import WiFiConnection
     logger.debug(const('WiFiConnection starting...'))
     #if not WiFiConnection.start_station_mode(hostname = "john"):
     #    raise RuntimeError('network connection failed')
